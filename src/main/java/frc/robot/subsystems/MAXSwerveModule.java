@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -142,6 +143,11 @@ public class MAXSwerveModule {
    */
   public void setDesiredState(SwerveModuleState desiredState) {
     // Apply chassis angular offset to the desired state.
+
+    SmartDashboard.putString( String.format( "Swerve %d ", m_turningSparkMax.getDeviceId()),
+                              String.format( " (%.2f) %s", m_chassisAngularOffset, desiredState.toString()));
+
+
     SwerveModuleState correctedDesiredState = new SwerveModuleState();
     correctedDesiredState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
     correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(m_chassisAngularOffset));
@@ -151,8 +157,20 @@ public class MAXSwerveModule {
         new Rotation2d(m_turningEncoder.getPosition()));
 
     // Command driving and turning SPARKS MAX towards their respective setpoints.
+    //m_drivingPIDController.setReference(correctedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
+    //m_turningPIDController.setReference(correctedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
+    
     m_drivingPIDController.setReference(optimizedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
     m_turningPIDController.setReference(optimizedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
+    
+    
+    SmartDashboard.putString( String.format( "Cor %d ", m_turningSparkMax.getDeviceId()),
+                              String.format( "%.2f mps, %.2f rad", correctedDesiredState.speedMetersPerSecond,
+                              correctedDesiredState.angle.getRadians()));
+    SmartDashboard.putString( String.format( "Opt %d ", m_turningSparkMax.getDeviceId()),
+                              String.format( "%.2f mps, %.2f rad", optimizedDesiredState.speedMetersPerSecond,
+                              optimizedDesiredState.angle.getRadians()));
+
 
     m_desiredState = desiredState;
   }
