@@ -150,4 +150,12 @@ public final class Constants {
   public static final class NeoMotorConstants {
     public static final double kFreeSpeedRpm = 5676;
   }
+
+  public static final class GPMConstants {
+    public static final int kArmCanId = 19; 
+    public static final int kCollectorCanId = 20;
+    public static final int kGPMSolenoidModule = 2;
+    public static final int[] kGPMSolenoidPorts = new int[] {0, 1};
+
+  }
 }
