@@ -37,7 +37,7 @@ public final class Constants {
 
     public static final double kDirectionSlewRate = 2.0; // radians per second
     public static final double kMagnitudeSlewRate = 3.0; // percent per second (1 = 100%)
-    public static final double kRotationalSlewRate = 2.0; // percent per second (1 = 100%)
+    public static final double kRotationalSlewRate = 3.0; // percent per second (1 = 100%)
 
     // Chassis configuration
     public static final double kTrackWidth = Units.inchesToMeters(26.5);
@@ -129,6 +129,8 @@ public final class Constants {
 
   public static final class OIConstants {
     public static final int kDriverControllerPort = 0;
+    public static final int kCoPilotController1Port= 1;
+    public static final int kCoPilotController2Port= 2;
     public static final double kDriveDeadband = 0.05;
   }
 
@@ -155,7 +157,7 @@ public final class Constants {
     public static final int kArmCanId = 19; 
     public static final int kCollectorCanId = 20;
     public static final int kGPMSolenoidModule = 2;
-    public static final int[] kGPMSolenoidPorts = new int[] {0, 1};
+    public static final int[] kGPMSolenoidPorts = new int[] {0, 15};
 
   }
 }

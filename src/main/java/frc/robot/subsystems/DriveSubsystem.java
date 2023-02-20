@@ -5,8 +5,12 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -17,6 +21,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.OIConstants;
 import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -54,6 +59,11 @@ public class DriveSubsystem extends SubsystemBase {
   private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
+  
+  private XboxController driver;
+  private Joystick copilot_1;
+  private Joystick copilot_2;
+
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
@@ -67,7 +77,10 @@ public class DriveSubsystem extends SubsystemBase {
       });
 
   /** Creates a new DriveSubsystem. */
-  public DriveSubsystem() {
+  public DriveSubsystem(XboxController driver, Joystick copilot_1, Joystick copilot_2) {
+    this.driver = driver;
+    this.copilot_1 = copilot_1;
+    this.copilot_2 = copilot_2;
   }
 
   @Override
@@ -81,6 +94,8 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
+
+    SmartDashboard.putString("DrivePeriodic", m_odometry.getPoseMeters().toString());
   }
 
   /**
@@ -119,11 +134,15 @@ public class DriveSubsystem extends SubsystemBase {
    *                      field.
    * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) {
-    
+  public void drive(boolean fieldRelative, boolean rateLimit) {
+
     double xSpeedCommanded;
     double ySpeedCommanded;
-
+    
+    double xSpeed = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband);
+    double ySpeed = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband);
+    double rot    = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband);
+    
     SmartDashboard.putNumber( "Heading", getHeading());
     
 
@@ -180,18 +199,25 @@ public class DriveSubsystem extends SubsystemBase {
     double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond* DriveConstants.kSpeedFactor;
     double rotDelivered = m_currentRotation * DriveConstants.kMaxAngularSpeed * DriveConstants.kTurnFactor;
 
+    move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);
+
+    
+  }
+
+  /*
+   * implement the desired axis movements
+   */
+  public void move(double x, double y, double t, boolean fieldRel) {
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
-        fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, getHeading2d())
-            : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
+      fieldRel
+          ? ChassisSpeeds.fromFieldRelativeSpeeds(x, y, t, getHeading2d())
+          : new ChassisSpeeds(x, y, t));
 
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
     m_rearRight.setDesiredState(swerveModuleStates[3]);
-
-    
   }
 
   /**

@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,7 +12,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
@@ -34,13 +33,17 @@ import java.util.List;
  * (including subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-  private final GPMSubsystem m_GPM = new GPMSubsystem();
 
-  // The driver's controller
+    // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  Joystick  m_copilot_1             = new Joystick(OIConstants.kCoPilotController1Port);
+  Joystick  m_copilot_2             = new Joystick(OIConstants.kCoPilotController2Port);
 
+  // The robot's subsystems
+  private final DriveSubsystem  m_robotDrive    = new DriveSubsystem(m_driverController, m_copilot_1, m_copilot_2);
+  private final GPMSubsystem    m_GPM           = new GPMSubsystem(m_driverController, m_copilot_1, m_copilot_2);
+
+  
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -49,16 +52,8 @@ public class RobotContainer {
     configureButtonBindings();
 
     // Configure default commands
-    m_robotDrive.setDefaultCommand(
-        // The left stick controls translation of the robot.
-        // Turning is controlled by the X axis of the right stick.
-        new RunCommand(
-            () -> m_robotDrive.drive(
-                -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
-                true, true),
-            m_robotDrive));
+    m_robotDrive.setDefaultCommand(new RunCommand(() -> m_robotDrive.drive(true, true),m_robotDrive));
+    m_GPM.setDefaultCommand(new RunCommand(() -> m_GPM.teleopRun(),m_GPM));
   }
 
   /**
@@ -73,23 +68,7 @@ public class RobotContainer {
   private void configureButtonBindings() {
     new JoystickButton(m_driverController, Button.kOptions.value)
         .onTrue(new RunCommand(() -> m_robotDrive.zeroHeading(), m_robotDrive));
-
-        new JoystickButton(m_driverController, Button.kCircle.value)
-        .onTrue(new RunCommand(() -> m_GPM.runArm(.2), m_GPM))
-        .onFalse(new RunCommand(() -> m_GPM.runArm(0), m_GPM));
-
-        new JoystickButton(m_driverController, Button.kCross.value)
-        .onTrue(new RunCommand(() -> m_GPM.runArm(-0.2), m_GPM))
-        .onFalse(new RunCommand(() -> m_GPM.runArm(0), m_GPM));
-
-        new JoystickButton(m_driverController, Button.kSquare.value)
-        .onTrue(new RunCommand(() -> m_GPM.runCollector(.2), m_GPM))
-        .onFalse(new RunCommand(() -> m_GPM.runCollector(0), m_GPM));
-
-        new JoystickButton(m_driverController, Button.kTriangle.value)
-        .onTrue(new RunCommand(() -> m_GPM.runCollector(-0.2), m_GPM))
-        .onFalse(new RunCommand(() -> m_GPM.runCollector(0), m_GPM));
-     
+    
   }
 
   /**
@@ -135,6 +114,6 @@ public class RobotContainer {
     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
     // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false, false));
+    return swerveControllerCommand.andThen(() -> m_robotDrive.move(0, 0, 0, false));
   }
 }
