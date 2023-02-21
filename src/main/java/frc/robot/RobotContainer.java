@@ -34,14 +34,15 @@ import java.util.List;
  */
 public class RobotContainer {
 
-    // The driver's controller
+
+  // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
   Joystick  m_copilot_1             = new Joystick(OIConstants.kCoPilotController1Port);
   Joystick  m_copilot_2             = new Joystick(OIConstants.kCoPilotController2Port);
 
   // The robot's subsystems
   private final DriveSubsystem  m_robotDrive    = new DriveSubsystem(m_driverController, m_copilot_1, m_copilot_2);
-  private final GPMSubsystem    m_GPM           = new GPMSubsystem(m_driverController, m_copilot_1, m_copilot_2);
+  public final GPMSubsystem    m_GPM           = new GPMSubsystem(m_driverController, m_copilot_1, m_copilot_2);
 
   
   /**

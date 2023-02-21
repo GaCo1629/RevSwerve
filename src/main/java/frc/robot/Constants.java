@@ -102,6 +102,9 @@ public final class Constants {
 
     public static final double kTurningEncoderPositionFactor = (2 * Math.PI); // radians
     public static final double kTurningEncoderVelocityFactor = (2 * Math.PI) / 60.0; // radians per second
+    
+    public static final double kArmEncoderPositionFactor = 360; // degrees
+    public static final double kArmEncoderVelocityFactor = 60;  // degrees
 
     public static final double kTurningEncoderPositionPIDMinInput = 0; // radians
     public static final double kTurningEncoderPositionPIDMaxInput = kTurningEncoderPositionFactor; // radians
@@ -120,8 +123,16 @@ public final class Constants {
     public static final double kTurningMinOutput = -1;
     public static final double kTurningMaxOutput = 1;
 
+    public static final double kArmP = 0.02;
+    public static final double kArmI = 0.00002;
+    public static final double kArmD = 0;
+    public static final double kArmFF = 0;
+    public static final double kArmMinOutput = -0.3;
+    public static final double kArmMaxOutput =  0.5;
+
     public static final IdleMode kDrivingMotorIdleMode = IdleMode.kBrake;
     public static final IdleMode kTurningMotorIdleMode = IdleMode.kBrake;
+    public static final IdleMode kArmMotorIdleMode = IdleMode.kBrake;
 
     public static final int kDrivingMotorCurrentLimit = 50; // amps
     public static final int kTurningMotorCurrentLimit = 20; // amps
@@ -155,7 +166,7 @@ public final class Constants {
 
   public static final class GPMConstants {
     public static final int kArmCanId = 19; 
-    public static final int kCollectorCanId = 20;
+    public static final int kCollectorCanId = 20; 
     public static final int kGPMSolenoidModule = 2;
     public static final int[] kGPMSolenoidPorts = new int[] {0, 15};
 
