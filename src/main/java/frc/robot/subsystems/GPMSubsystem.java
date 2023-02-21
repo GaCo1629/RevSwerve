@@ -122,6 +122,8 @@ public class GPMSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Arm Angle (deg)", m_armEncoder.getPosition());
         SmartDashboard.putNumber("Arm Setpoint (deg)", m_armSetpoint);
         SmartDashboard.putNumber("I Accum", m_armPIDController.getIAccum());
+        SmartDashboard.putBoolean("Wrapping", m_armPIDController.getPositionPIDWrappingEnabled());
+
     }
     
     /** Lift the Arm. */
