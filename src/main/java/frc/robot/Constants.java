@@ -20,7 +20,8 @@ import edu.wpi.first.math.util.Units;
  *
  * <p>
  * It is advised to statically import this class (or one of its inner classes)
- * wherever the
+ * wherever 
+ * 
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
@@ -123,8 +124,8 @@ public final class Constants {
     public static final double kTurningMinOutput = -1;
     public static final double kTurningMaxOutput = 1;
 
-    public static final double kArmP = 0.02;
-    public static final double kArmI = 0.00002;
+    public static final double kArmP = 1;
+    public static final double kArmI = 0;
     public static final double kArmD = 0;
     public static final double kArmFF = 0;
     public static final double kArmMinOutput = -0.3;
@@ -143,6 +144,25 @@ public final class Constants {
     public static final int kCoPilotController1Port= 1;
     public static final int kCoPilotController2Port= 2;
     public static final double kDriveDeadband = 0.05;
+    public static final int kDriverGyroReset = 8;
+    public static final int kCP1Retract = 1;
+    public static final int kCP1InCone = 2;
+    public static final int kCP1InCube = 3;
+    public static final int kCP1InGround = 4;
+    public static final int kCP1OutCone = 5;
+    public static final int kCP1OutCube = 6;
+    public static final int kCP2Pos1 = 1;
+    public static final int kCP2Pos2 = 2;
+    public static final int kCP2Pos3 = 3;
+    public static final int kCP2Pos4 = 4;
+    public static final int kCP2Pos5 = 5;
+    public static final int kCP2Pos6 = 6;
+    public static final int kCP2Pos7 = 7;
+    public static final int kCP2Pos8 = 8;
+    public static final int kCP2Pos9 = 9;
+    public static final int kCP2LvlBot = 10;
+    public static final int kCP2LvlMid = 11;
+    public static final int kCP2LvlTop = 12;
   }
 
   public static final class AutoConstants {
@@ -150,6 +170,17 @@ public final class Constants {
     public static final double kMaxAccelerationMetersPerSecondSquared = 3;
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
+
+    public static final double kArmConeBot = 0.2;
+    public static final double kArmConeMid = 0.3;
+    public static final double kArmConeTop = 0.4;
+    public static final double kArmCubeBot = 0.25;
+    public static final double kArmCubeMid = 0.35;
+    public static final double kArmCubeTop = 0.45;
+    public static final double kArmHumCone = 0.5;
+    public static final double kArmHumCube = 0.5;
+    public static final double kArmHome = 0.15;
+    public static final double kArmGround = 0.2;
 
     public static final double kPXController = 1;
     public static final double kPYController = 1;

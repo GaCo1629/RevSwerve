@@ -20,6 +20,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
+import frc.robot.Positions;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.utils.SwerveUtils;
@@ -95,7 +96,17 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         });
 
+    if(driver.getRawButtonPressed(OIConstants.kDriverGyroReset)){
+      zeroHeading();
+    }
+
+    
+
     SmartDashboard.putString("DrivePeriodic", m_odometry.getPoseMeters().toString());
+    SmartDashboard.putNumber("Heading", getHeading());
+    SmartDashboard.putNumber("Level", Positions.gridLvl);
+    SmartDashboard.putNumber("Position", Positions.gridNumber);
+
   }
 
   /**
