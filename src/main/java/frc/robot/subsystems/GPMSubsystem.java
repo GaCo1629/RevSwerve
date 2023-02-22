@@ -39,9 +39,9 @@ public class GPMSubsystem extends SubsystemBase {
     private final AbsoluteEncoder m_armEncoder;
     //private final SparkMaxPIDController m_armPIDController;
 
-    private double m_armSetpoint = 60;
+    private double m_armSetpoint ;
 
-    private PIDController m_armPID = new PIDController(3, 0.5, 0);
+    private PIDController m_armPID ;
     
    
     //---------------------------------------
@@ -51,9 +51,9 @@ public class GPMSubsystem extends SubsystemBase {
         this.copilot_1 = copilot_1;
         this.copilot_2 = copilot_2;
 
-        m_armPID.setIntegratorRange(-0.2, 0.2);
-
-
+        m_armPID = new PIDController(GPMConstants.kArmP, GPMConstants.kArmI, GPMConstants.kArmD);
+        m_armPID.setIntegratorRange(-GPMConstants.kArmMaxI, GPMConstants.kArmMaxI);
+       
         // Setup encoders and PID controllers for the driving and turning SPARKS MAX.
         m_armEncoder = m_armMax.getAbsoluteEncoder(Type.kDutyCycle);
        
@@ -76,7 +76,7 @@ public class GPMSubsystem extends SubsystemBase {
         else if (driver.getRightBumper())
             lowerGPM();
 
-        if (driver.getYButtonPressed() && (m_armSetpoint < 0.5)) 
+        if (driver.getYButtonPressed() && (m_armSetpoint < 0.6)) 
             runArm(m_armSetpoint += 0.02);
         else if (driver.getAButtonPressed() && (m_armSetpoint > .15))
             runArm(m_armSetpoint -= 0.02);
@@ -148,6 +148,11 @@ public class GPMSubsystem extends SubsystemBase {
 
         // m_armPIDController.setReference(m_armSetpoint, CANSparkMax.ControlType.kPosition);
         double armOutput = m_armPID.calculate(m_armEncoder.getPosition(), m_armSetpoint);
+        if (armOutput > 0){
+            armOutput *= 1.75;
+        } else {
+            armOutput *= 0.5;
+        }
         m_armMax.set(armOutput);
 
         SmartDashboard.putNumber("Arm Motor", armOutput);
