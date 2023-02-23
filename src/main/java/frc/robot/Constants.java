@@ -34,9 +34,8 @@ public final class Constants {
     public static final double kSpeedFactor = 0.6;
     public static final double kTurnFactor  = 0.6; 
 
-    public static final double kDirectionSlewRate = 4; // radians per second
-    public static final double kMagnitudeSlewRate = 1.0; // percent per second (1 = 100%)
-    public static final double kRotationalSlewRate = 1.5; // percent per second (1 = 100%)
+    public static final double kMagnitudeSlewRate = 2; // percent per second (1 = 100%)
+    public static final double kRotationalSlewRate = 2; // percent per second (1 = 100%)
 
     // Chassis configuration
     public static final double kTrackWidth = Units.inchesToMeters(26.5);
@@ -127,7 +126,7 @@ public final class Constants {
     public static final int kCoPilotController1Port= 1;
     public static final int kCoPilotController2Port= 2;
     public static final double kDriveDeadband = 0.05;
-    public static final int kDriverGyroReset = 8;
+    public static final int kDriverGyroReset = 14;
     public static final int kCP1Retract = 1;
     public static final int kCP1InCone = 2;
     public static final int kCP1InCube = 3;
@@ -162,16 +161,25 @@ public final class Constants {
     public static final double kArmCubeTop = 0.45;
     public static final double kArmHumCone = 0.5;
     public static final double kArmHumCube = 0.5;
-    public static final double kArmHome = 0.15;
+    public static final double kArmHome = 0.14;
     public static final double kArmGround = 0.2;
 
     public static final double kPXController = 1;
     public static final double kPYController = 1;
     public static final double kPThetaController = 1;
 
+    public static final double kAutoMaxAngularSpeedRadiansPerSecond = 8.0;
+    public static final double kAutoMaxAngularAccelerationRadiansPerSecondSquared = 8.0 ;
+
     // Constraint for the motion profiled robot angle controller
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
         kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+
+    public static final double kPHeadingLockController = 2;
+    public static final double kIHeadingLockController = 0;
+    public static final double kDHeadingLockController = 0; 
+
+    public static final double kNotRotating = 1.0 ;  // degrees per second
   }
 
   public static final class NeoMotorConstants {
@@ -185,9 +193,12 @@ public final class Constants {
     public static final int[] kGPMSolenoidPorts = new int[] {0, 15};
     
     public static final double kArmP = 4;
-    public static final double kArmI = 0;
+    public static final double kArmI = 6;
     public static final double kArmD = 0;
     public static final double kArmMaxI = 0.10;
+
+    public static final double kMaxVelocity = 0.3 ;
+    public static final double kMaxAcceleration = 1.0 ;
   }
 }
  

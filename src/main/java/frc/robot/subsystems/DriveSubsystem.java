@@ -6,11 +6,14 @@ package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,11 +22,11 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import frc.robot.Positions;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
-import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -50,21 +53,19 @@ public class DriveSubsystem extends SubsystemBase {
 
   // The gyro sensor
   //private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
-  private final AHRS m_gyro = new AHRS(SPI.Port.kMXP);  
+  private final AHRS m_gyro = new AHRS(SPI.Port.kMXP); 
+  private double gyro2FieldOffset = 0;
+  private double gyro2FCDOffset = 0; 
 
-  // Slew rate filter variables for controlling lateral acceleration
-  private double m_currentRotation = 0.0;
-  private double m_currentTranslationDir = 0.0;
-  private double m_currentTranslationMag = 0.0;
-
-  private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
+  private SlewRateLimiter m_xLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
+  private SlewRateLimiter m_yLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
-  private double m_prevTime = WPIUtilJNI.now() * 1e-6;
   
-  private XboxController driver;
-  private Joystick copilot_1;
-  private Joystick copilot_2;
-
+  private PS4Controller driver;
+  private ProfiledPIDController headingLockController;
+  private boolean headingLocked = false;
+  private double  currentHeading = 0;
+  private double  headingSetpoint = 0;  
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
@@ -78,17 +79,24 @@ public class DriveSubsystem extends SubsystemBase {
       });
 
   /** Creates a new DriveSubsystem. */
-  public DriveSubsystem(XboxController driver, Joystick copilot_1, Joystick copilot_2) {
+  public DriveSubsystem(PS4Controller driver, Joystick copilot_1, Joystick copilot_2) {
     this.driver = driver;
-    this.copilot_1 = copilot_1;
-    this.copilot_2 = copilot_2;
+
+    headingLockController = new ProfiledPIDController(AutoConstants.kPHeadingLockController, 0, 0,
+    new Constraints(AutoConstants.kAutoMaxAngularSpeedRadiansPerSecond,AutoConstants.kAutoMaxAngularAccelerationRadiansPerSecondSquared));
+    headingLockController.enableContinuousInput(-Math.PI, Math.PI);
+  }
+ 
+  public void init() {
+    setFieldOffsets();
+    lockCurrentHeading();
   }
 
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromRadians(getHeading()),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -97,16 +105,14 @@ public class DriveSubsystem extends SubsystemBase {
         });
 
     if(driver.getRawButtonPressed(OIConstants.kDriverGyroReset)){
-      zeroHeading();
+      resetGyroToZero();
+      lockCurrentHeading();
     }
-
-    
 
     SmartDashboard.putString("DrivePeriodic", m_odometry.getPoseMeters().toString());
     SmartDashboard.putNumber("Heading", getHeading());
     SmartDashboard.putNumber("Level", Positions.gridLvl);
     SmartDashboard.putNumber("Position", Positions.gridNumber);
-
   }
 
   /**
@@ -149,70 +155,118 @@ public class DriveSubsystem extends SubsystemBase {
 
     double xSpeedCommanded;
     double ySpeedCommanded;
+    double rotationCommanded ;
     
     double xSpeed = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband);
     double ySpeed = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband);
     double rot    = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband);
     
-    SmartDashboard.putNumber( "Heading", getHeading());
-    
-
-    if (rateLimit) {
-      // Convert XY to polar for rate limiting
-      double inputTranslationDir = Math.atan2(ySpeed, xSpeed);
-      double inputTranslationMag = Math.sqrt(Math.pow(xSpeed, 2) + Math.pow(ySpeed, 2));
-
-      // Calculate the direction slew rate based on an estimate of the lateral acceleration
-      double directionSlewRate;
-      if (m_currentTranslationMag != 0.0) {
-        directionSlewRate = Math.abs(DriveConstants.kDirectionSlewRate / m_currentTranslationMag);
-      } else {
-        directionSlewRate = 500.0; //some high number that means the slew rate is effectively instantaneous
+    // Drive with pure motions
+    int POV = driver.getPOV();
+    if (POV >= 0) {
+      rot = 0;
+      switch ((int)(POV / 45)) {
+        case 0: xSpeed =  0.2; ySpeed =  0.0; break;
+        case 2: xSpeed =  0.0; ySpeed = -0.2; break;
+        case 4: xSpeed = -0.2; ySpeed =  0.0; break;
+        case 6: xSpeed =  0.0; ySpeed =  0.2; break;
+        default: xSpeed =  0.0; ySpeed =  0.0; break;
       }
-      
-
-      double currentTime = WPIUtilJNI.now() * 1e-6;
-      double elapsedTime = currentTime - m_prevTime;
-      double angleDif = SwerveUtils.AngleDifference(inputTranslationDir, m_currentTranslationDir);
-      if (angleDif < 0.45*Math.PI) {
-        m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
-        m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
-      }
-      else if (angleDif > 0.85*Math.PI) {
-        if (m_currentTranslationMag > 1e-4) { //some small number to avoid floating-point errors with equality checking
-          // keep currentTranslationDir unchanged
-          m_currentTranslationMag = m_magLimiter.calculate(0.0);
-        }
-        else {
-          m_currentTranslationDir = SwerveUtils.WrapAngle(m_currentTranslationDir + Math.PI);
-          m_currentTranslationMag = m_magLimiter.calculate(inputTranslationMag);
-        }
-      }
-      else {
-        m_currentTranslationDir = SwerveUtils.StepTowardsCircular(m_currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
-        m_currentTranslationMag = m_magLimiter.calculate(0.0);
-      }
-      m_prevTime = currentTime;
-      
-      xSpeedCommanded = m_currentTranslationMag * Math.cos(m_currentTranslationDir);
-      ySpeedCommanded = m_currentTranslationMag * Math.sin(m_currentTranslationDir);
-      m_currentRotation = m_rotLimiter.calculate(rot);
-
-
-    } else {
-      xSpeedCommanded = xSpeed;
-      ySpeedCommanded = ySpeed;
-      m_currentRotation = rot;
     }
 
+    SmartDashboard.putNumber( "Heading", getHeading());
+    SmartDashboard.putNumber( "X Move", xSpeed);
+    SmartDashboard.putNumber( "Y Move", ySpeed);
+    SmartDashboard.putNumber( "Rotate", rot);
+
+    currentHeading = getHeading(); 
+
+    // Rate limit the input commands
+    xSpeedCommanded = m_xLimiter.calculate(xSpeed) ;
+    ySpeedCommanded = m_yLimiter.calculate(ySpeed);
+    rotationCommanded = m_rotLimiter.calculate(rot);
+  
+
+      // Check Auto Heading
+    if (Math.abs(rot) > 0.02) {
+        headingLocked = false;
+    } else if (!headingLocked && isNotRotating()) {
+        headingLocked = true;
+        lockCurrentHeading(); 
+    }
+
+    if (headingLocked) {
+
+      rotationCommanded = headingLockController.calculate(currentHeading, headingSetpoint);
+        if (Math.abs(rotationCommanded) < 0.1) {
+          rotationCommanded = 0;
+        } 
+    }
+
+    SmartDashboard.putBoolean("Heading Locked", headingLocked);
+
+  
     // Convert the commanded speeds into the correct units for the drivetrain
     double xSpeedDelivered = xSpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond * DriveConstants.kSpeedFactor;
     double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond* DriveConstants.kSpeedFactor;
-    double rotDelivered = m_currentRotation * DriveConstants.kMaxAngularSpeed * DriveConstants.kTurnFactor;
+    double rotDelivered = rotationCommanded * DriveConstants.kMaxAngularSpeed * DriveConstants.kTurnFactor;
 
     move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);
 
-    
+    SmartDashboard.putNumber("Heading", getHeading());
+    SmartDashboard.putNumber("FCD Heading", getFCDHeading() );
+        
+  }
+
+  public void newHeadingSetpoint(double newSetpoint) {
+    headingSetpoint = newSetpoint;
+    headingLockController.reset(currentHeading);
+  }
+
+  public void lockCurrentHeading() {
+    currentHeading = getHeading(); 
+    newHeadingSetpoint(currentHeading);
+  }
+
+  public boolean isNotRotating() {
+    SmartDashboard.putNumber("Rotate rate", m_gyro.getRate());
+
+    return (Math.abs(m_gyro.getRate()) < AutoConstants.kNotRotating);
+  }
+
+
+  public double resetGyroToZero() {
+    m_gyro.reset();
+    setFieldOffsets();
+    lockCurrentHeading();
+    return currentHeading ;
+  }
+
+  public void setFieldOffsets() {
+    if (DriverStation.getAlliance() == Alliance.Red){
+      gyro2FieldOffset = 0.0;
+      gyro2FCDOffset = Math.PI;
+    } else {
+        gyro2FieldOffset = Math.PI;  
+        gyro2FCDOffset = Math.PI; 
+    }
+  }
+
+  public double getHeading() {
+      return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FieldOffset, Math.PI * 2);
+  }
+
+  public double getFCDHeading() {
+      return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FCDOffset, Math.PI * 2);
+  }
+
+
+  public Rotation2d getRotation2d() {
+      return Rotation2d.fromRadians(getHeading());
+  }
+
+  public Rotation2d getFCDRotation2d() {
+      return Rotation2d.fromRadians(getFCDHeading());
   }
 
   /*
@@ -221,7 +275,7 @@ public class DriveSubsystem extends SubsystemBase {
   public void move(double x, double y, double t, boolean fieldRel) {
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
       fieldRel
-          ? ChassisSpeeds.fromFieldRelativeSpeeds(x, y, t, getHeading2d())
+          ? ChassisSpeeds.fromFieldRelativeSpeeds(x, y, t, getFCDRotation2d())
           : new ChassisSpeeds(x, y, t));
 
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
@@ -263,35 +317,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearRight.resetEncoders();
   }
 
-  /** Zeroes the heading of the robot. */
-  public void zeroHeading() {
-    m_gyro.reset();
-  }
-
-  private double getGyroAngle() {
-    return m_gyro.getAngle() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
-  }
-
-  /**
-   * Returns the heading of the robot.
-   *
-   * @return the robot's heading in degrees, from -180 to 180
-   */
-  public double getHeading() {
-    return getHeading2d().getDegrees();
-  }
-
-
-  /**
-   * Returns the heading of the robot as a 2d vector.
-   *
-   * @return the robot's heading in degrees, from -180 to 180
-   */
-  public Rotation2d getHeading2d() {
-    return Rotation2d.fromDegrees(getGyroAngle());
-  }
-
-
+    
   /**
    * Returns the turn rate of the robot.
    *

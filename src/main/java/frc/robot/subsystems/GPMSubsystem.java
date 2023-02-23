@@ -3,22 +3,23 @@ package frc.robot.subsystems;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kForward;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kReverse;
 
+import java.util.zip.ZipOutputStream;
+
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Positions;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.GPMConstants;
-import frc.robot.Constants.ModuleConstants;
 import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -31,7 +32,7 @@ public class GPMSubsystem extends SubsystemBase {
           GPMConstants.kGPMSolenoidPorts[0],
           GPMConstants.kGPMSolenoidPorts[1]);
 
-    private XboxController driver;
+    private PS4Controller driver;
     private Joystick copilot_1;
     private Joystick copilot_2;
     private CANSparkMax m_armMax = new CANSparkMax(GPMConstants.kArmCanId, MotorType.kBrushless);
@@ -40,71 +41,70 @@ public class GPMSubsystem extends SubsystemBase {
     //private final SparkMaxPIDController m_armPIDController;
 
     private double m_armSetpoint ;
-
-    private PIDController m_armPID ;
-    
-   
-    //---------------------------------------
-
-    public GPMSubsystem(XboxController driver, Joystick copilot_1, Joystick copilot_2) {
+    private ProfiledPIDController m_armPID ;
+       
+    public GPMSubsystem(PS4Controller driver, Joystick copilot_1, Joystick copilot_2) {
         this.driver = driver;
         this.copilot_1 = copilot_1;
         this.copilot_2 = copilot_2;
 
-        m_armPID = new PIDController(GPMConstants.kArmP, GPMConstants.kArmI, GPMConstants.kArmD);
+        m_armPID = new ProfiledPIDController(GPMConstants.kArmP, GPMConstants.kArmI, GPMConstants.kArmD,
+                                            new Constraints(GPMConstants.kMaxVelocity, GPMConstants.kMaxAcceleration));
         m_armPID.setIntegratorRange(-GPMConstants.kArmMaxI, GPMConstants.kArmMaxI);
        
         // Setup encoders and PID controllers for the driving and turning SPARKS MAX.
         m_armEncoder = m_armMax.getAbsoluteEncoder(Type.kDutyCycle);
-       
+        
     }
 
     @Override
     public void periodic() {
-    // Update the odometry in the periodic block
-        
+        // Update the odometry in the periodic block
+
     }
 
     public void init() {
-        m_armSetpoint = m_armEncoder.getPosition();
+        newArmSetpoint(m_armEncoder.getPosition());
+        m_armPID.reset(m_armEncoder.getPosition());
+    
     }
     
     public void teleopRun() {
         // Check for any manual controls
-        if (driver.getLeftBumper()) 
+        if (driver.getL1ButtonPressed()) 
             liftGPM();
-        else if (driver.getRightBumper())
+        else if (driver.getR1ButtonPressed())
             lowerGPM();
 
-        if (driver.getYButtonPressed() && (m_armSetpoint < 0.6)) 
-            runArm(m_armSetpoint += 0.02);
-        else if (driver.getAButtonPressed() && (m_armSetpoint > .15))
-            runArm(m_armSetpoint -= 0.02);
+        if (driver.getTriangleButtonPressed() && (m_armSetpoint < 0.6)) 
+            newArmSetpoint(m_armSetpoint + 0.02);
+        else if (driver.getCrossButtonPressed() && (m_armSetpoint > .14))
+            newArmSetpoint(m_armSetpoint - 0.02);
 
         if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) 
-            m_armSetpoint = AutoConstants.kArmHome;
+            newArmSetpoint(AutoConstants.kArmHome);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) 
-            m_armSetpoint = AutoConstants.kArmHumCone;
+            newArmSetpoint(AutoConstants.kArmHumCone);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) 
-            m_armSetpoint = AutoConstants.kArmHumCube;
+            newArmSetpoint(AutoConstants.kArmHumCube);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) 
-            m_armSetpoint = AutoConstants.kArmGround;
+            newArmSetpoint(AutoConstants.kArmGround);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
             if(Positions.gridLvl == 1){
-                m_armSetpoint = AutoConstants.kArmConeBot;
+                newArmSetpoint(AutoConstants.kArmConeBot);
             } else if(Positions.gridLvl == 2){
-                m_armSetpoint = AutoConstants.kArmConeMid;
+                newArmSetpoint(AutoConstants.kArmConeMid);
             } else if(Positions.gridLvl == 3){
-                m_armSetpoint = AutoConstants.kArmConeTop;
+                newArmSetpoint(AutoConstants.kArmConeTop);
             }
         }
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
             if(Positions.gridLvl == 1){
-                m_armSetpoint = AutoConstants.kArmCubeBot;
+                newArmSetpoint(AutoConstants.kArmCubeBot);
             } else if(Positions.gridLvl == 2){
-                m_armSetpoint = AutoConstants.kArmCubeMid;
+                newArmSetpoint(AutoConstants.kArmCubeMid);
             } else if(Positions.gridLvl == 3){
-                m_armSetpoint = AutoConstants.kArmCubeTop;
+                newArmSetpoint(AutoConstants.kArmCubeTop);
             }
         }
 
@@ -139,20 +139,19 @@ public class GPMSubsystem extends SubsystemBase {
         }
 
     
-        if (driver.getXButton()) 
+        if (driver.getCircleButtonPressed()) 
             runCollector(0.2);
-        else if (driver.getBButton())
+        else if (driver.getSquareButtonPressed())
             runCollector(-0.35);
         else
             runCollector(0);
 
         // m_armPIDController.setReference(m_armSetpoint, CANSparkMax.ControlType.kPosition);
+        //double armOutput = m_armPID.calculate(m_armEncoder.getPosition(), m_armSetpoint);
         double armOutput = m_armPID.calculate(m_armEncoder.getPosition(), m_armSetpoint);
-        if (armOutput > 0){
-            armOutput *= 1.75;
-        } else {
-            armOutput *= 0.5;
-        }
+        if (armOutput < 0){
+            armOutput *= 0.75;
+        } 
         m_armMax.set(armOutput);
 
         SmartDashboard.putNumber("Arm Motor", armOutput);
@@ -161,6 +160,10 @@ public class GPMSubsystem extends SubsystemBase {
   
     }
     
+    public void newArmSetpoint(double setpoint) {
+        m_armSetpoint = setpoint;
+    }
+
     /** Lift the Arm. */
     public void liftGPM() {
       m_liftSolenoid.set(kForward);
