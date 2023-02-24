@@ -34,10 +34,10 @@ public final class Constants {
     public static String cameraName = "OV5647";
     static final Transform3d robotToCam =
     new Transform3d(
-            new Translation3d(0.3, 0.0, 0.3),
+            new Translation3d(-0.12, 0.0, 0.74),
             new Rotation3d(
                     0, 0,
-                    0)); // Cam mounted facing forward, 30cm forward of center, 30cm up from center.
+                    0)); // Cam mounted facing forward, 5 in forward of center, 29 in, up from center.
 
 }
   
@@ -169,17 +169,6 @@ public final class Constants {
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
 
-    public static final double kArmConeBot = 0.2;
-    public static final double kArmConeMid = 0.3;
-    public static final double kArmConeTop = 0.4;
-    public static final double kArmCubeBot = 0.25;
-    public static final double kArmCubeMid = 0.35;
-    public static final double kArmCubeTop = 0.45;
-    public static final double kArmHumCone = 0.5;
-    public static final double kArmHumCube = 0.6;
-    public static final double kArmHome = 0.13;
-    public static final double kArmGround = 0.2;
-
     public static final double kPXController = 1;
     public static final double kPYController = 1;
     public static final double kPThetaController = 1;
@@ -208,13 +197,28 @@ public final class Constants {
     public static final int kGPMSolenoidModule = 2;
     public static final int[] kGPMSolenoidPorts = new int[] {0, 15};
     
-    public static final double kArmP = 4;
+    public static final double kArmP = 3.5;
     public static final double kArmI = 0;
     public static final double kArmD = 0;
     public static final double kArmMaxI = 0.10;
 
     public static final double kMaxVelocity = 0.3 ;
     public static final double kMaxAcceleration = 1.0 ;
+
+    public static final double kArmConeBot = 0.2;
+    public static final double kArmConeMid = 0.3;
+    public static final double kArmConeTop = 0.4;
+    public static final double kArmCubeBot = 0.25;
+    public static final double kArmCubeMid = 0.35;
+    public static final double kArmCubeTop = 0.45;
+    public static final double kArmHumCone = 0.5;
+    public static final double kArmHumCube = 0.6;
+    public static final double kArmHome = 0.12;
+    public static final double kArmGround = 0.2;
+
+    public static final double kArmBackstop = 0.13;   
+    public static final double kArmBackstopTrigger = 0.14;   
+    public static final double kArmBackPower = -0.05;
   }
 }
  

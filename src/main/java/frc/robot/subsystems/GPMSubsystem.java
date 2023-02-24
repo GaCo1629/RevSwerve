@@ -78,33 +78,33 @@ public class GPMSubsystem extends SubsystemBase {
 
         if (driver.getTriangleButtonPressed() && (m_armSetpoint < 0.6)) 
             newArmSetpoint(m_armSetpoint + 0.02);
-        else if (driver.getCrossButtonPressed() && (m_armSetpoint > .14))
+        else if (driver.getCrossButtonPressed() && (m_armSetpoint > .12))
             newArmSetpoint(m_armSetpoint - 0.02);
 
         if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) 
-            newArmSetpoint(AutoConstants.kArmHome);
+            newArmSetpoint(GPMConstants.kArmHome);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) 
-            newArmSetpoint(AutoConstants.kArmHumCone);
+            newArmSetpoint(GPMConstants.kArmHumCone);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) 
-            newArmSetpoint(AutoConstants.kArmHumCube);
+            newArmSetpoint(GPMConstants.kArmHumCube);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) 
-            newArmSetpoint(AutoConstants.kArmGround);
+            newArmSetpoint(GPMConstants.kArmGround);
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
             if(Positions.gridLvl == 1){
-                newArmSetpoint(AutoConstants.kArmConeBot);
+                newArmSetpoint(GPMConstants.kArmConeBot);
             } else if(Positions.gridLvl == 2){
-                newArmSetpoint(AutoConstants.kArmConeMid);
+                newArmSetpoint(GPMConstants.kArmConeMid);
             } else if(Positions.gridLvl == 3){
-                newArmSetpoint(AutoConstants.kArmConeTop);
+                newArmSetpoint(GPMConstants.kArmConeTop);
             }
         }
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
             if(Positions.gridLvl == 1){
-                newArmSetpoint(AutoConstants.kArmCubeBot);
+                newArmSetpoint(GPMConstants.kArmCubeBot);
             } else if(Positions.gridLvl == 2){
-                newArmSetpoint(AutoConstants.kArmCubeMid);
+                newArmSetpoint(GPMConstants.kArmCubeMid);
             } else if(Positions.gridLvl == 3){
-                newArmSetpoint(AutoConstants.kArmCubeTop);
+                newArmSetpoint(GPMConstants.kArmCubeTop);
             }
         }
 
@@ -152,8 +152,13 @@ public class GPMSubsystem extends SubsystemBase {
         if (armOutput < 0){
             armOutput *= 0.75;
         } 
-        m_armMax.set(armOutput);
 
+        // lock arm against backstop
+        if ((m_armSetpoint < GPMConstants.kArmBackstop) && (m_armEncoder.getPosition() < GPMConstants.kArmBackstopTrigger)) {
+            armOutput = GPMConstants.kArmBackPower;
+        } 
+        m_armMax.set(armOutput); 
+        
         SmartDashboard.putNumber("Arm Motor", armOutput);
         SmartDashboard.putNumber("Arm Angle (deg)", m_armEncoder.getPosition());
         SmartDashboard.putNumber("Arm Setpoint (deg)", m_armSetpoint);

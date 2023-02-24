@@ -61,7 +61,6 @@ public class DriveSubsystem extends SubsystemBase {
   //private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
   private final AHRS m_gyro = new AHRS(SPI.Port.kMXP); 
   private double gyro2FieldOffset = 0;
-  private double gyro2FCDOffset = 0; 
 
   private final PhotonCameraWrapper pcw = new PhotonCameraWrapper();
 
@@ -78,7 +77,7 @@ public class DriveSubsystem extends SubsystemBase {
   // Odometry class for tracking robot pose
   SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(m_gyro.getAngle()),
+      getRotation2d(),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -98,35 +97,41 @@ public class DriveSubsystem extends SubsystemBase {
   public void init() {
     setFieldOffsets();
     lockCurrentHeading();
+    resetOdometry(new Pose2d());
   }
 
   @Override
   public void periodic() {
+
+    if(driver.getRawButtonPressed(OIConstants.kDriverGyroReset)){
+      resetGyroToZero();
+      lockCurrentHeading();
+      resetOdometry(new Pose2d());  // Temporary
+    }
+
     // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromRadians(getHeading()),
-        new SwerveModulePosition[] {
+      Rotation2d.fromRadians(getHeading()),
+      new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
 
-        Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
+    
+    Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
 
-        if (result.isPresent()) {
-            EstimatedRobotPose camPose = result.get();
-            m_odometry.addVisionMeasurement(
-                    camPose.estimatedPose.toPose2d(), camPose.timestampSeconds);
-        }
-
-    if(driver.getRawButtonPressed(OIConstants.kDriverGyroReset)){
-      resetGyroToZero();
-      lockCurrentHeading();
+    if (result.isPresent()) {
+        EstimatedRobotPose camPose = result.get();
+        Pose2d camPose2d = camPose.estimatedPose.toPose2d();
+        Pose2d gyroCamPose2d = new Pose2d(camPose2d.getTranslation(), getRotation2d());  // use gyro heading
+        
+        m_odometry.addVisionMeasurement(gyroCamPose2d, camPose.timestampSeconds);
     }
-
-    SmartDashboard.putString("DrivePeriodic", m_odometry.getEstimatedPosition().toString());
-    SmartDashboard.putNumber("Heading", getHeading());
+     
+    SmartDashboard.putString("Est Pose", m_odometry.getEstimatedPosition().toString());
+    SmartDashboard.putString("Heading", String.format("%.2f (deg)  %.3f (Rad)", Math.toDegrees(getHeading()), getHeading()));
     SmartDashboard.putNumber("Level", Positions.gridLvl);
     SmartDashboard.putNumber("Position", Positions.gridNumber);
   }
@@ -147,7 +152,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+      getRotation2d(),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -229,7 +234,6 @@ public class DriveSubsystem extends SubsystemBase {
 
     move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);
 
-    SmartDashboard.putNumber("Heading", getHeading());
     SmartDashboard.putNumber("FCD Heading", getFCDHeading() );
         
   }
@@ -261,10 +265,8 @@ public class DriveSubsystem extends SubsystemBase {
   public void setFieldOffsets() {
     if (DriverStation.getAlliance() == Alliance.Red){
       gyro2FieldOffset = 0.0;
-      gyro2FCDOffset = Math.PI;
     } else {
         gyro2FieldOffset = Math.PI;  
-        gyro2FCDOffset = Math.PI; 
     }
   }
 
@@ -273,7 +275,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public double getFCDHeading() {
-      return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FCDOffset, Math.PI * 2);
+      return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + Math.PI, Math.PI * 2);
   }
 
 
