@@ -139,9 +139,9 @@ public class GPMSubsystem extends SubsystemBase {
         }
 
     
-        if (driver.getCircleButtonPressed()) 
+        if (driver.getCircleButton()) 
             runCollector(0.2);
-        else if (driver.getSquareButtonPressed())
+        else if (driver.getSquareButton())
             runCollector(-0.35);
         else
             runCollector(0);

@@ -6,7 +6,10 @@ package frc.robot;
 
 import com.revrobotics.CANSparkMax.IdleMode;
 
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -25,6 +28,19 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  
+   //Vision Constants
+   public static final class VisionConstants {
+    public static String cameraName = "OV5647";
+    static final Transform3d robotToCam =
+    new Transform3d(
+            new Translation3d(0.3, 0.0, 0.3),
+            new Rotation3d(
+                    0, 0,
+                    0)); // Cam mounted facing forward, 30cm forward of center, 30cm up from center.
+
+}
+  
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
     // the robot, rather the allowed maximum speeds
@@ -160,8 +176,8 @@ public final class Constants {
     public static final double kArmCubeMid = 0.35;
     public static final double kArmCubeTop = 0.45;
     public static final double kArmHumCone = 0.5;
-    public static final double kArmHumCube = 0.5;
-    public static final double kArmHome = 0.14;
+    public static final double kArmHumCube = 0.6;
+    public static final double kArmHome = 0.13;
     public static final double kArmGround = 0.2;
 
     public static final double kPXController = 1;
@@ -193,7 +209,7 @@ public final class Constants {
     public static final int[] kGPMSolenoidPorts = new int[] {0, 15};
     
     public static final double kArmP = 4;
-    public static final double kArmI = 6;
+    public static final double kArmI = 0;
     public static final double kArmD = 0;
     public static final double kArmMaxI = 0.10;
 
