@@ -81,9 +81,9 @@ public class GPMSubsystem extends SubsystemBase {
 
         // Lift and Lower the Arm    
         if (driver.getTriangleButtonPressed() && (m_armSetpoint < GPMConstants.kArmMax)) 
-            newArmSetpoint(m_armSetpoint + 0.02);
+            newArmSetpoint(m_armSetpoint + 0.01);
         else if (driver.getCrossButtonPressed() && (m_armSetpoint > GPMConstants.kArmHome))
-            newArmSetpoint(m_armSetpoint - 0.02);
+            newArmSetpoint(m_armSetpoint - 0.01);
 
         // Look for cone pickup    
         if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) {
@@ -146,6 +146,12 @@ public class GPMSubsystem extends SubsystemBase {
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos9)){
             setTargetPosition(9);
         }
+
+        if (driver.getRawButtonPressed(13)) {
+            Scoring.cone = !Scoring.cone;
+        }
+
+        SmartDashboard.putString("Scoring", Scoring.cone ? "Cone" : "Cube");
 
         // run the collector.  Hold onto object once it's grabbed
         if (driver.getCircleButton()) {

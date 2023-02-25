@@ -184,7 +184,7 @@ public final class Constants {
     public static final double kIHeadingLockController = 0;
     public static final double kDHeadingLockController = 0; 
 
-    public static final double kNotRotating = 1.0 ;  // degrees per second
+    public static final double kNotRotating = 0.5 ;  // degrees per second was 1.0
   }
 
   public static final class NeoMotorConstants {
@@ -205,21 +205,21 @@ public final class Constants {
     public static final double kMaxVelocity = 0.3 ;
     public static final double kMaxAcceleration = 1.0 ;
 
-    public static final double kConeCollectPower  =  0.3 ;
-    public static final double kConeHoldPower     =  0.05 ;
-    public static final double kConeEjectPower    = -0.2 ;
-    public static final double kCubeCollectPower  = -0.3 ;
-    public static final double kCubeHoldPower     = -0.05 ;
-    public static final double kCubeEjectPower    =  0.2 ;
+    public static final double kConeCollectPower  = -0.5 ;
+    public static final double kConeHoldPower     = -0.05 ;
+    public static final double kConeEjectPower    =  0.2 ;
+    public static final double kCubeCollectPower  =  0.3 ;
+    public static final double kCubeHoldPower     =  0.05 ;
+    public static final double kCubeEjectPower    = -0.2 ;
     
-    public static final double kArmConeBot = 0.2;
-    public static final double kArmConeMid = 0.3;
-    public static final double kArmConeTop = 0.4;
-    public static final double kArmCubeBot = 0.25;
-    public static final double kArmCubeMid = 0.35;
-    public static final double kArmCubeTop = 0.45;
-    public static final double kArmHumCone = 0.5;
-    public static final double kArmHumCube = 0.6;
+    public static final double kArmConeBot = 0.21;
+    public static final double kArmConeMid = 0.46;
+    public static final double kArmConeTop = 0.56;
+    public static final double kArmCubeBot = 0.26;
+    public static final double kArmCubeMid = 0.42;
+    public static final double kArmCubeTop = 0.52;
+    public static final double kArmHumCone = 0.55;
+    public static final double kArmHumCube = 0.54;
     public static final double kArmHome = 0.12;
     public static final double kArmGround = 0.2;
     public static final double kArmMax  = 0.6;

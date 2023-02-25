@@ -5,9 +5,7 @@
 package frc.robot.subsystems;
 
 import java.util.Optional;
-
 import org.photonvision.EstimatedRobotPose;
-
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -24,7 +22,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -263,7 +260,7 @@ public class DriveSubsystem extends SubsystemBase {
     if (DriverStation.getAlliance() == Alliance.Red){
       gyro2FieldOffset = 0.0;
     } else {
-        gyro2FieldOffset = Math.PI;  
+      gyro2FieldOffset = Math.PI;  
     }
   }
 
