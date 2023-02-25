@@ -13,8 +13,10 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.GPMConstants;
 
 public class AutoSubsystem extends SubsystemBase {  
      
@@ -27,8 +29,14 @@ public class AutoSubsystem extends SubsystemBase {
     }
 
 
+    public void init() {
+        m_robotDrive.resetGyroToZero();
+    }
+
     public Command getBasicAuto(){
 
+        m_GPM.runCollector(GPMConstants.kConeAutoEjectPower);
+        
         TrajectoryConfig config = new TrajectoryConfig(
         AutoConstants.kMaxSpeedMetersPerSecond,
         AutoConstants.kMaxAccelerationMetersPerSecondSquared)
@@ -36,16 +44,21 @@ public class AutoSubsystem extends SubsystemBase {
 
         // An example trajectory to follow. All units in meters.
         Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
-            // Start at the origin facing the +X direction
-            m_robotDrive.getPose(),
+            // Start at the origin facing the +X 
+            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(135) ),
             // Pass through these two interior waypoints, making an 's' curve path
-            List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+            List.of(    new Translation2d(13.5, 4.8), 
+                        new Translation2d(12.5, 4.8),
+                        new Translation2d(11.5, 4.8),
+                        new Translation2d(10.5, 4.2)
+                        ),
             // End 3 meters straight ahead of where we started, facing forward
-            new Pose2d(3, 0, new Rotation2d(0)),
+            new Pose2d(10.5, 3.5, new Rotation2d(0)),
             config);
 
         var thetaController = new ProfiledPIDController(
-            AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+            // AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
+            AutoConstants.kPThetaController, 0, 0, AutoConstants.kHeadingLockConstraints);
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
@@ -61,7 +74,7 @@ public class AutoSubsystem extends SubsystemBase {
             m_robotDrive);
 
         // Reset odometry to the starting pose of the trajectory.
-        m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
+        // m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
         // Run path following command, then stop at the end.
         return swerveControllerCommand.andThen(() -> m_robotDrive.move(0, 0, 0, false));

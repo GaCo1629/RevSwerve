@@ -178,8 +178,11 @@ public final class Constants {
 
     // Constraint for the motion profiled robot angle controller
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
-        kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+      kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
 
+    public static final TrapezoidProfile.Constraints kHeadingLockConstraints = new TrapezoidProfile.Constraints(
+      kAutoMaxAngularSpeedRadiansPerSecond, kAutoMaxAngularAccelerationRadiansPerSecondSquared);
+  
     public static final double kPHeadingLockController = 2;
     public static final double kIHeadingLockController = 0;
     public static final double kDHeadingLockController = 0; 
@@ -205,7 +208,9 @@ public final class Constants {
     public static final double kMaxVelocity = 0.3 ;
     public static final double kMaxAcceleration = 1.0 ;
 
+   
     public static final double kConeCollectPower  = -0.5 ;
+    public static final double kConeAutoEjectPower = -0.3 ;
     public static final double kConeHoldPower     = -0.05 ;
     public static final double kConeEjectPower    =  0.2 ;
     public static final double kCubeCollectPower  =  0.3 ;

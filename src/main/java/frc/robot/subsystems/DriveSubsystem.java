@@ -24,9 +24,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import frc.robot.PhotonCameraWrapper;
-import frc.robot.Scoring;
+import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
@@ -86,8 +85,7 @@ public class DriveSubsystem extends SubsystemBase {
   public DriveSubsystem(PS4Controller driver, Joystick copilot_1, Joystick copilot_2) {
     this.driver = driver;
 
-    headingLockController = new ProfiledPIDController(AutoConstants.kPHeadingLockController, 0, 0,
-    new Constraints(AutoConstants.kAutoMaxAngularSpeedRadiansPerSecond,AutoConstants.kAutoMaxAngularAccelerationRadiansPerSecondSquared));
+    headingLockController = new ProfiledPIDController(AutoConstants.kPHeadingLockController, 0, 0, AutoConstants.kHeadingLockConstraints );
     headingLockController.enableContinuousInput(-Math.PI, Math.PI);
   }
  
@@ -127,10 +125,13 @@ public class DriveSubsystem extends SubsystemBase {
         m_odometry.addVisionMeasurement(gyroCamPose2d, camPose.timestampSeconds);
     }
      
-    SmartDashboard.putString("Est Pose", m_odometry.getEstimatedPosition().toString());
-    SmartDashboard.putString("Heading", String.format("%.2f (deg)  %.3f (Rad)", Math.toDegrees(getHeading()), getHeading()));
-    SmartDashboard.putNumber("Level", Scoring.gridLvl);
-    SmartDashboard.putNumber("Position", Scoring.gridNumber);
+    // Share current position
+    Shared.currentPose = getPose();
+
+    SmartDashboard.putString("Est Pose", getPose().toString());
+    SmartDashboard.putString("Heading", String.format("%.2f (deg)", Math.toDegrees(getHeading())));
+    SmartDashboard.putNumber("Level", Shared.gridLvl);
+    SmartDashboard.putNumber("Position", Shared.gridNumber);
   }
 
   /**
@@ -192,10 +193,6 @@ public class DriveSubsystem extends SubsystemBase {
       }
     }
 
-    SmartDashboard.putNumber( "Heading", getHeading());
-    SmartDashboard.putNumber( "X Move", xSpeed);
-    SmartDashboard.putNumber( "Y Move", ySpeed);
-    SmartDashboard.putNumber( "Rotate", rot);
 
     currentHeading = getHeading(); 
 
@@ -228,8 +225,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);
 
+    SmartDashboard.putNumber( "X Move", xSpeed);
+    SmartDashboard.putNumber( "Y Move", ySpeed);
+    SmartDashboard.putNumber( "Rotate", rot);
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
-    SmartDashboard.putString("Target", String.format("X:%.2f Y:%.2f H:%.0f", Scoring.targetX, Scoring.targetY, Math.toDegrees(Scoring.targetH)));
+    SmartDashboard.putString("Target", String.format("X:%.2f Y:%.2f H:%.0f", Shared.targetX, Shared.targetY, Math.toDegrees(Shared.targetH)));
   }
 
   public void newHeadingSetpoint(double newSetpoint) {
@@ -268,6 +268,7 @@ public class DriveSubsystem extends SubsystemBase {
       return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FieldOffset, Math.PI * 2);
   }
 
+  
   public double getFCDHeading() {
       return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + Math.PI, Math.PI * 2);
   }

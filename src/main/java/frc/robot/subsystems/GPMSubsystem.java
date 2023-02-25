@@ -3,7 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kForward;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kReverse;
 
-import frc.robot.Scoring;
+import frc.robot.Shared;
 import frc.robot.Constants.GPMConstants;
 import frc.robot.Constants.NavConstants;
 import frc.robot.Constants.OIConstants;
@@ -90,40 +90,40 @@ public class GPMSubsystem extends SubsystemBase {
             newArmSetpoint(GPMConstants.kArmHome);
         } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
             newArmSetpoint(GPMConstants.kArmHumCone);
-            Scoring.cone = true;
+            Shared.cone = true;
         } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
             newArmSetpoint(GPMConstants.kArmHumCube);
-            Scoring.cone = false;
+            Shared.cone = false;
         } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) { 
             newArmSetpoint(GPMConstants.kArmGround);
         } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
-            Scoring.cone = true;
-            if(Scoring.gridLvl == 1){
+            Shared.cone = true;
+            if(Shared.gridLvl == 1){
                 newArmSetpoint(GPMConstants.kArmConeBot);
-            } else if(Scoring.gridLvl == 2){
+            } else if(Shared.gridLvl == 2){
                 newArmSetpoint(GPMConstants.kArmConeMid);
-            } else if(Scoring.gridLvl == 3){
+            } else if(Shared.gridLvl == 3){
                 newArmSetpoint(GPMConstants.kArmConeTop);
             }
         }
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
-            Scoring.cone = false;
-            if(Scoring.gridLvl == 1){
+            Shared.cone = false;
+            if(Shared.gridLvl == 1){
                 newArmSetpoint(GPMConstants.kArmCubeBot);
-            } else if(Scoring.gridLvl == 2){
+            } else if(Shared.gridLvl == 2){
                 newArmSetpoint(GPMConstants.kArmCubeMid);
-            } else if(Scoring.gridLvl == 3){
+            } else if(Shared.gridLvl == 3){
                 newArmSetpoint(GPMConstants.kArmCubeTop);
             }
         }
 
         // Look for cone scoring level
         if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlBot)){
-            Scoring.gridLvl = 1;
+            Shared.gridLvl = 1;
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlMid)){
-            Scoring.gridLvl = 2;
+            Shared.gridLvl = 2;
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlTop)){
-            Scoring.gridLvl = 3;
+            Shared.gridLvl = 3;
         }
 
         // Look for cone scoring position
@@ -148,14 +148,14 @@ public class GPMSubsystem extends SubsystemBase {
         }
 
         if (driver.getRawButtonPressed(13)) {
-            Scoring.cone = !Scoring.cone;
+            Shared.cone = !Shared.cone;
         }
 
-        SmartDashboard.putString("Scoring", Scoring.cone ? "Cone" : "Cube");
+        SmartDashboard.putString("Scoring", Shared.cone ? "Cone" : "Cube");
 
         // run the collector.  Hold onto object once it's grabbed
         if (driver.getCircleButton()) {
-            if (Scoring.cone) {
+            if (Shared.cone) {
                 runCollector(GPMConstants.kConeCollectPower);
                 collectorHoldingPower = GPMConstants.kConeHoldPower;
             } else {
@@ -163,7 +163,7 @@ public class GPMSubsystem extends SubsystemBase {
                 collectorHoldingPower = GPMConstants.kCubeHoldPower;
             }
         } else if (driver.getSquareButton()) {
-            if (Scoring.cone) {
+            if (Shared.cone) {
                 runCollector(GPMConstants.kConeEjectPower);
                 collectorHoldingPower = 0;
             } else {
@@ -195,15 +195,15 @@ public class GPMSubsystem extends SubsystemBase {
 
     public void setTargetPosition(int position) {
         // Save position number and calculate XY position
-        Scoring.gridNumber = position;
+        Shared.gridNumber = position;
         if (DriverStation.getAlliance() == Alliance.Red) {
-            Scoring.targetX = 14.0;        
-            Scoring.targetY = NavConstants.redYPos[position - 1];
-            Scoring.targetH = 0;        
+            Shared.targetX = 14.0;        
+            Shared.targetY = NavConstants.redYPos[position - 1];
+            Shared.targetH = 0;        
         } else {
-            Scoring.targetX = 2.5;        
-            Scoring.targetY = NavConstants.redYPos[9 - position];
-            Scoring.targetH = Math.PI;        
+            Shared.targetX = 2.5;        
+            Shared.targetY = NavConstants.redYPos[9 - position];
+            Shared.targetH = Math.PI;        
         }
     }
     
