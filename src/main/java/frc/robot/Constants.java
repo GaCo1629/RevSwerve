@@ -205,6 +205,13 @@ public final class Constants {
     public static final double kMaxVelocity = 0.3 ;
     public static final double kMaxAcceleration = 1.0 ;
 
+    public static final double kConeCollectPower  =  0.3 ;
+    public static final double kConeHoldPower     =  0.05 ;
+    public static final double kConeEjectPower    = -0.2 ;
+    public static final double kCubeCollectPower  = -0.3 ;
+    public static final double kCubeHoldPower     = -0.05 ;
+    public static final double kCubeEjectPower    =  0.2 ;
+    
     public static final double kArmConeBot = 0.2;
     public static final double kArmConeMid = 0.3;
     public static final double kArmConeTop = 0.4;
@@ -215,10 +222,15 @@ public final class Constants {
     public static final double kArmHumCube = 0.6;
     public static final double kArmHome = 0.12;
     public static final double kArmGround = 0.2;
-
+    public static final double kArmMax  = 0.6;
+    
     public static final double kArmBackstop = 0.13;   
     public static final double kArmBackstopTrigger = 0.14;   
     public static final double kArmBackPower = -0.05;
+  }
+
+  public static final class NavConstants {
+    public static final double [] redYPos = {1.07,1.07,1.07, 2.75,2.75,2.75, 4.42,4.42,4.42};
   }
 }
  

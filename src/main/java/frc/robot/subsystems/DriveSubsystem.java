@@ -29,7 +29,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import frc.robot.PhotonCameraWrapper;
-import frc.robot.Positions;
+import frc.robot.Scoring;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
@@ -132,8 +132,8 @@ public class DriveSubsystem extends SubsystemBase {
      
     SmartDashboard.putString("Est Pose", m_odometry.getEstimatedPosition().toString());
     SmartDashboard.putString("Heading", String.format("%.2f (deg)  %.3f (Rad)", Math.toDegrees(getHeading()), getHeading()));
-    SmartDashboard.putNumber("Level", Positions.gridLvl);
-    SmartDashboard.putNumber("Position", Positions.gridNumber);
+    SmartDashboard.putNumber("Level", Scoring.gridLvl);
+    SmartDashboard.putNumber("Position", Scoring.gridNumber);
   }
 
   /**
@@ -223,9 +223,6 @@ public class DriveSubsystem extends SubsystemBase {
           rotationCommanded = 0;
         } 
     }
-
-    SmartDashboard.putBoolean("Heading Locked", headingLocked);
-
   
     // Convert the commanded speeds into the correct units for the drivetrain
     double xSpeedDelivered = xSpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond * DriveConstants.kSpeedFactor;
@@ -234,8 +231,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);
 
-    SmartDashboard.putNumber("FCD Heading", getFCDHeading() );
-        
+    SmartDashboard.putBoolean("Heading Locked", headingLocked);
+    SmartDashboard.putString("Target", String.format("X:%.2f Y:%.2f H:%.0f", Scoring.targetX, Scoring.targetY, Math.toDegrees(Scoring.targetH)));
   }
 
   public void newHeadingSetpoint(double newSetpoint) {

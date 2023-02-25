@@ -3,7 +3,10 @@ package frc.robot.subsystems;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kForward;
 import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.kReverse;
 
-import java.util.zip.ZipOutputStream;
+import frc.robot.Scoring;
+import frc.robot.Constants.GPMConstants;
+import frc.robot.Constants.NavConstants;
+import frc.robot.Constants.OIConstants;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
@@ -13,17 +16,15 @@ import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Positions;
-import frc.robot.Constants.AutoConstants;
-import frc.robot.Constants.GPMConstants;
-import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-/** A hatch mechanism actuated by a single {@link edu.wpi.first.wpilibj.DoubleSolenoid}. */
+// Game-piece Scoring Mechanism
 public class GPMSubsystem extends SubsystemBase {
      
     private final DoubleSolenoid m_liftSolenoid =
@@ -38,10 +39,11 @@ public class GPMSubsystem extends SubsystemBase {
     private CANSparkMax m_armMax = new CANSparkMax(GPMConstants.kArmCanId, MotorType.kBrushless);
     private CANSparkMax m_collectorMax = new CANSparkMax(GPMConstants.kCollectorCanId, MotorType.kBrushless);
     private final AbsoluteEncoder m_armEncoder;
-    //private final SparkMaxPIDController m_armPIDController;
 
     private double m_armSetpoint ;
     private ProfiledPIDController m_armPID ;
+
+    private double collectorHoldingPower = 0;
        
     public GPMSubsystem(PS4Controller driver, Joystick copilot_1, Joystick copilot_2) {
         this.driver = driver;
@@ -70,84 +72,103 @@ public class GPMSubsystem extends SubsystemBase {
     }
     
     public void teleopRun() {
-        // Check for any manual controls
+        
+        // Lift and Lower the frame
         if (driver.getL1ButtonPressed()) 
             liftGPM();
         else if (driver.getR1ButtonPressed())
             lowerGPM();
 
-        if (driver.getTriangleButtonPressed() && (m_armSetpoint < 0.6)) 
+        // Lift and Lower the Arm    
+        if (driver.getTriangleButtonPressed() && (m_armSetpoint < GPMConstants.kArmMax)) 
             newArmSetpoint(m_armSetpoint + 0.02);
-        else if (driver.getCrossButtonPressed() && (m_armSetpoint > .12))
+        else if (driver.getCrossButtonPressed() && (m_armSetpoint > GPMConstants.kArmHome))
             newArmSetpoint(m_armSetpoint - 0.02);
 
-        if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) 
+        // Look for cone pickup    
+        if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) {
             newArmSetpoint(GPMConstants.kArmHome);
-        else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) 
+        } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
             newArmSetpoint(GPMConstants.kArmHumCone);
-        else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) 
+            Scoring.cone = true;
+        } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
             newArmSetpoint(GPMConstants.kArmHumCube);
-        else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) 
+            Scoring.cone = false;
+        } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) { 
             newArmSetpoint(GPMConstants.kArmGround);
-        else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
-            if(Positions.gridLvl == 1){
+        } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
+            Scoring.cone = true;
+            if(Scoring.gridLvl == 1){
                 newArmSetpoint(GPMConstants.kArmConeBot);
-            } else if(Positions.gridLvl == 2){
+            } else if(Scoring.gridLvl == 2){
                 newArmSetpoint(GPMConstants.kArmConeMid);
-            } else if(Positions.gridLvl == 3){
+            } else if(Scoring.gridLvl == 3){
                 newArmSetpoint(GPMConstants.kArmConeTop);
             }
         }
         else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
-            if(Positions.gridLvl == 1){
+            Scoring.cone = false;
+            if(Scoring.gridLvl == 1){
                 newArmSetpoint(GPMConstants.kArmCubeBot);
-            } else if(Positions.gridLvl == 2){
+            } else if(Scoring.gridLvl == 2){
                 newArmSetpoint(GPMConstants.kArmCubeMid);
-            } else if(Positions.gridLvl == 3){
+            } else if(Scoring.gridLvl == 3){
                 newArmSetpoint(GPMConstants.kArmCubeTop);
             }
         }
 
-
+        // Look for cone scoring level
         if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlBot)){
-            Positions.gridLvl = 1;
+            Scoring.gridLvl = 1;
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlMid)){
-            Positions.gridLvl = 2;
+            Scoring.gridLvl = 2;
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlTop)){
-            Positions.gridLvl = 3;
+            Scoring.gridLvl = 3;
         }
 
-
+        // Look for cone scoring position
         if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos1)){
-            Positions.gridNumber = 1;
+            setTargetPosition(1);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos2)){
-            Positions.gridNumber = 2;
+            setTargetPosition(2);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos3)){
-            Positions.gridNumber = 3;
+            setTargetPosition(3);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos4)){
-            Positions.gridNumber = 4;
+            setTargetPosition(4);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos5)){
-            Positions.gridNumber = 5;
+            setTargetPosition(5);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos6)){
-            Positions.gridNumber = 6;
+            setTargetPosition(6);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos7)){
-            Positions.gridNumber = 7;
+            setTargetPosition(7);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos8)){
-            Positions.gridNumber = 8;
+            setTargetPosition(8);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos9)){
-            Positions.gridNumber = 9;
+            setTargetPosition(9);
         }
 
-    
-        if (driver.getCircleButton()) 
-            runCollector(0.2);
-        else if (driver.getSquareButton())
-            runCollector(-0.35);
-        else
-            runCollector(0);
+        // run the collector.  Hold onto object once it's grabbed
+        if (driver.getCircleButton()) {
+            if (Scoring.cone) {
+                runCollector(GPMConstants.kConeCollectPower);
+                collectorHoldingPower = GPMConstants.kConeHoldPower;
+            } else {
+                runCollector(GPMConstants.kCubeCollectPower);
+                collectorHoldingPower = GPMConstants.kCubeHoldPower;
+            }
+        } else if (driver.getSquareButton()) {
+            if (Scoring.cone) {
+                runCollector(GPMConstants.kConeEjectPower);
+                collectorHoldingPower = 0;
+            } else {
+                runCollector(GPMConstants.kCubeEjectPower);
+                collectorHoldingPower = 0;
+            }
+        } else {
+            runCollector(collectorHoldingPower);
+        }    
 
-        // m_armPIDController.setReference(m_armSetpoint, CANSparkMax.ControlType.kPosition);
-        //double armOutput = m_armPID.calculate(m_armEncoder.getPosition(), m_armSetpoint);
+        // Run the arm PID and apply the velocity profile.
         double armOutput = m_armPID.calculate(m_armEncoder.getPosition(), m_armSetpoint);
         if (armOutput < 0){
             armOutput *= 0.75;
@@ -157,12 +178,27 @@ public class GPMSubsystem extends SubsystemBase {
         if ((m_armSetpoint < GPMConstants.kArmBackstop) && (m_armEncoder.getPosition() < GPMConstants.kArmBackstopTrigger)) {
             armOutput = GPMConstants.kArmBackPower;
         } 
+
+        // Send power to arm;
         m_armMax.set(armOutput); 
         
         SmartDashboard.putNumber("Arm Motor", armOutput);
         SmartDashboard.putNumber("Arm Angle (deg)", m_armEncoder.getPosition());
         SmartDashboard.putNumber("Arm Setpoint (deg)", m_armSetpoint);
-  
+    }
+
+    public void setTargetPosition(int position) {
+        // Save position number and calculate XY position
+        Scoring.gridNumber = position;
+        if (DriverStation.getAlliance() == Alliance.Red) {
+            Scoring.targetX = 14.0;        
+            Scoring.targetY = NavConstants.redYPos[position - 1];
+            Scoring.targetH = 0;        
+        } else {
+            Scoring.targetX = 2.5;        
+            Scoring.targetY = NavConstants.redYPos[9 - position];
+            Scoring.targetH = Math.PI;        
+        }
     }
     
     public void newArmSetpoint(double setpoint) {
