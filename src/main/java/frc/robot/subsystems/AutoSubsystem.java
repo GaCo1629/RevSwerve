@@ -52,7 +52,6 @@ public class AutoSubsystem extends SubsystemBase {
                         new Translation2d(11.5, 4.8),
                         new Translation2d(10.5, 4.2)
                         ),
-            // End 3 meters straight ahead of where we started, facing forward
             new Pose2d(10.5, 3.5, new Rotation2d(0)),
             config);
 
@@ -77,6 +76,8 @@ public class AutoSubsystem extends SubsystemBase {
         // m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
         // Run path following command, then stop at the end.
-        return swerveControllerCommand.andThen(() -> m_robotDrive.move(0, 0, 0, false));
+        return swerveControllerCommand
+                .andThen(() -> m_robotDrive.move(0, 0, 0, false))
+                .andThen(() -> m_robotDrive.lockCurrentHeading());
     }
 }

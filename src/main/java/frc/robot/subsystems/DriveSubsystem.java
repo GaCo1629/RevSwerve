@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -92,7 +93,7 @@ public class DriveSubsystem extends SubsystemBase {
   public void init() {
     setFieldOffsets();
     lockCurrentHeading();
-    resetOdometry(new Pose2d());
+    resetOdometry(Shared.currentPose);
   }
 
   @Override
@@ -193,8 +194,16 @@ public class DriveSubsystem extends SubsystemBase {
       }
     }
 
-
     currentHeading = getHeading(); 
+
+    // look to flip direction
+    if (driver.getR1ButtonPressed()) {
+      if (Math.abs(currentHeading) < Math.PI/2) {
+        newHeadingSetpoint(Math.PI);
+      } else {
+        newHeadingSetpoint(0);
+      }
+    }
 
     // Rate limit the input commands
     xSpeedCommanded = m_xLimiter.calculate(xSpeed) ;
