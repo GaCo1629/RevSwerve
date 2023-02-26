@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 // Game-piece Scoring Mechanism
@@ -38,7 +39,7 @@ public class GPMSubsystem extends SubsystemBase {
     private Joystick copilot_2;
     private CANSparkMax m_armMax = new CANSparkMax(GPMConstants.kArmCanId, MotorType.kBrushless);
     private CANSparkMax m_collectorMax = new CANSparkMax(GPMConstants.kCollectorCanId, MotorType.kBrushless);
-    private final AbsoluteEncoder m_armEncoder;
+    private AbsoluteEncoder m_armEncoder;
 
     private double m_armSetpoint ;
     private ProfiledPIDController m_armPID ;
@@ -55,26 +56,30 @@ public class GPMSubsystem extends SubsystemBase {
         m_armPID.setIntegratorRange(-GPMConstants.kArmMaxI, GPMConstants.kArmMaxI);
        
         // Setup encoders and PID controllers for the driving and turning SPARKS MAX.
-        m_armEncoder = m_armMax.getAbsoluteEncoder(Type.kDutyCycle);
-        
+        m_armEncoder = m_armMax.getAbsoluteEncoder(Type.kDutyCycle);  
     }
 
     @Override
     public void periodic() {
-        // Update the odometry in the periodic block
-
+        runGPMPID();   
     }
 
     public void init() {
         newArmSetpoint(m_armEncoder.getPosition());
-        m_armPID.reset(m_armEncoder.getPosition());
-    
+        m_armPID.reset(m_armEncoder.getPosition());  
+        for (int i=1; i < 10; i++) {
+            copilot_1.getRawButtonPressed(i);
+            copilot_2.getRawButtonPressed(i);
+        } 
     }
     
+    /**
+     * This method is used to control the arm during teleop
+     */
     public void teleopRun() {
         
         // Lift and Lower the frame manually
-        if (driver.getL1ButtonPressed()) {
+        if (driver.getRawButtonPressed(13)) {
             if (Shared.liftDown) {
                 liftGPM();
             } else {
@@ -82,7 +87,6 @@ public class GPMSubsystem extends SubsystemBase {
             }
         }
     
-
         // Extend and Retract the arm    
         if (driver.getTriangleButtonPressed() && (m_armSetpoint < GPMConstants.kArmMax)) 
             newArmSetpoint(m_armSetpoint + 0.01);
@@ -96,21 +100,24 @@ public class GPMSubsystem extends SubsystemBase {
             liftGPM();    
         } else {
 
+            if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) {
+                newArmSetpoint(GPMConstants.kArmGround);
+                lowerGPM();    
+            }
+
             // Are we holding the Ground button down?
             if (copilot_1.getRawButton(OIConstants.kCP1InGround)) {
-                // Lower frame and extend arm for pickup
-                newArmSetpoint(GPMConstants.kArmGround);
-                lowerGPM();
-                
                 // Allow scoring piece to be selected
                 if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
                     Shared.cone = true;
+                    newArmSetpoint(GPMConstants.kArmConeGround);
                 } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
                     Shared.cone = false;
+                    newArmSetpoint(GPMConstants.kArmCubeGround);
                 }
             } else {
 
-                // Upright pickup ord deposit  
+                // Upright pickup or deposit  
                 if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) {
                     newArmSetpoint(GPMConstants.kArmHome);
                 } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
@@ -119,37 +126,39 @@ public class GPMSubsystem extends SubsystemBase {
                 } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
                     newArmSetpoint(GPMConstants.kArmHumCube);
                     Shared.cone = false;
-                } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
-                    Shared.cone = true;
-                    if (Shared.gridLvl == 3){
-                        newArmSetpoint(GPMConstants.kArmConeTop);
-                    } else if(Shared.gridLvl == 2){
-                        newArmSetpoint(GPMConstants.kArmConeMid);
-                    } else {
+                } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlBot)){
+                    Shared.gridLvl = 1;
+                    if (Shared.cone) {
                         newArmSetpoint(GPMConstants.kArmConeBot);
-                    }  
-                }
-                else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
-                    Shared.cone = false;
-                    if(Shared.gridLvl == 3){
-                        newArmSetpoint(GPMConstants.kArmCubeTop);
-                    } else if(Shared.gridLvl == 2){
-                        newArmSetpoint(GPMConstants.kArmCubeMid);
                     } else {
                         newArmSetpoint(GPMConstants.kArmCubeBot);
-                    } 
+                    }
+                } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlMid)){
+                    Shared.gridLvl = 2;
+                    if (Shared.cone) {
+                        newArmSetpoint(GPMConstants.kArmConeMid);
+                    } else {
+                        newArmSetpoint(GPMConstants.kArmCubeMid);
+                    }
+                } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlTop)){
+                    Shared.gridLvl = 3;
+                    if (Shared.cone) {
+                        newArmSetpoint(GPMConstants.kArmConeTop);
+                    } else {
+                        newArmSetpoint(GPMConstants.kArmCubeTop);
+                    }
+                }
+                
+                if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
+                    Shared.cone = true;    
+                }
+                else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
+                    Shared.cone = false;   
                 }
             }
         }
 
-        // Look for cone scoring level
-        if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlBot)){
-            Shared.gridLvl = 1;
-        } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlMid)){
-            Shared.gridLvl = 2;
-        } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2LvlTop)){
-            Shared.gridLvl = 3;
-        }
+        
 
         // Look for cone scoring position
         if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos1)){
@@ -199,6 +208,11 @@ public class GPMSubsystem extends SubsystemBase {
             runCollector(collectorHoldingPower);
         }    
 
+        // power the motor arm to go to the arm setpoint
+        // runGPMPID();
+    }
+
+    public void runGPMPID() {
         // Run the arm PID and apply the velocity profile.
         double armOutput = m_armPID.calculate(m_armEncoder.getPosition(), m_armSetpoint);
         if (armOutput < 0){
@@ -212,11 +226,13 @@ public class GPMSubsystem extends SubsystemBase {
 
         // Send power to arm;
         m_armMax.set(armOutput); 
-        
+        Shared.armInPosition = (Math.abs(m_armEncoder.getPosition() - m_armSetpoint) < 0.05);
+
         SmartDashboard.putNumber("Arm Motor", armOutput);
         SmartDashboard.putNumber("Arm Angle (deg)", m_armEncoder.getPosition());
         SmartDashboard.putNumber("Arm Setpoint (deg)", m_armSetpoint);
         SmartDashboard.putString("Arm Lift", Shared.liftDown ? "DOWN" : "UP");
+        SmartDashboard.putBoolean("Arm In Position", Shared.armInPosition);
     }
 
     public void setTargetPosition(int position) {
@@ -235,25 +251,35 @@ public class GPMSubsystem extends SubsystemBase {
     
     public void newArmSetpoint(double setpoint) {
         m_armSetpoint = setpoint;
+        Shared.armSetpoint = setpoint;
+        Shared.armInPosition = false;
     }
+    public CommandBase newArmSetpointCmd(double setpoint) {return this.runOnce(() -> newArmSetpoint(setpoint));}
+
 
     /** Lift the Arm. Support */
     public void liftGPM() {
       m_liftSolenoid.set(kForward);
       Shared.liftDown = false;
     }
+    public CommandBase liftGPMCmd() {return this.runOnce(() -> liftGPM());}
+
 
     /** Lower the arm. Support*/
     public void lowerGPM() {
         m_liftSolenoid.set(kReverse);
         Shared.liftDown = true;
     }
+    public CommandBase lowerGPMCmd() {return this.runOnce(() -> lowerGPM());}
+
 
     public void runArm(double speed) {
         m_armMax.set(speed);
     }
-
+    
     public void runCollector(double speed) {
         m_collectorMax.set(speed);
     }
+    public CommandBase runCollectorCmd(double speed) {return this.runOnce(() -> runCollector(speed));}
+
 }

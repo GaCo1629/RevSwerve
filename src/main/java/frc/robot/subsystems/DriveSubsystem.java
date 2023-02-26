@@ -29,6 +29,7 @@ import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -93,6 +94,9 @@ public class DriveSubsystem extends SubsystemBase {
     setFieldOffsets();
     lockCurrentHeading();
     resetOdometry(Shared.currentPose);
+    for (int i=1; i < 10; i++) {
+      driver.getRawButtonPressed(i);
+    }
   }
 
   @Override
@@ -249,6 +253,8 @@ public class DriveSubsystem extends SubsystemBase {
     currentHeading = getHeading(); 
     newHeadingSetpoint(currentHeading);
   }
+  public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
+
 
   public boolean isNotRotating() {
     SmartDashboard.putNumber("Rotate rate", m_gyro.getRate());
@@ -305,6 +311,13 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
     m_rearRight.setDesiredState(swerveModuleStates[3]);
   }
+ 
+  public CommandBase moveCmd(double x, double y, double t, boolean fieldRel) {return this.runOnce(() -> move(x, y, t, fieldRel));}
+
+  public void stop() {
+    move(0,0,0, false);
+  }
+  public CommandBase stopCmd() {return this.runOnce(() -> stop());}
 
   /**
    * Sets the wheels into an X formation to prevent movement.

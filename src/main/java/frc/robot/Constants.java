@@ -227,6 +227,8 @@ public final class Constants {
     public static final double kArmHumCube = 0.51;
     public static final double kArmHome = 0.12;
     public static final double kArmGround = 0.36;
+    public static final double kArmConeGround = 0.38;
+    public static final double kArmCubeGround = 0.34;
     public static final double kArmMax  = 0.6;
     
     public static final double kArmBackstop = 0.13;   
