@@ -198,7 +198,7 @@ public final class Constants {
     public static final int kArmCanId = 19; 
     public static final int kCollectorCanId = 20; 
     public static final int kGPMSolenoidModule = 2;
-    public static final int[] kGPMSolenoidPorts = new int[] {0, 15};
+    public static final int[] kGPMSolenoidPorts = new int[] {15, 0}; // Up, Down
     
     public static final double kArmP = 3.5;
     public static final double kArmI = 0;
@@ -223,10 +223,10 @@ public final class Constants {
     public static final double kArmCubeBot = 0.26;
     public static final double kArmCubeMid = 0.42;
     public static final double kArmCubeTop = 0.52;
-    public static final double kArmHumCone = 0.55;
-    public static final double kArmHumCube = 0.54;
+    public static final double kArmHumCone = 0.52;
+    public static final double kArmHumCube = 0.51;
     public static final double kArmHome = 0.12;
-    public static final double kArmGround = 0.2;
+    public static final double kArmGround = 0.36;
     public static final double kArmMax  = 0.6;
     
     public static final double kArmBackstop = 0.13;   
