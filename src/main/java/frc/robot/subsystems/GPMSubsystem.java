@@ -74,10 +74,15 @@ public class GPMSubsystem extends SubsystemBase {
     public void teleopRun() {
         
         // Lift and Lower the frame
-        if (driver.getL1ButtonPressed()) 
-            liftGPM();
-        else if (driver.getR1ButtonPressed())
-            lowerGPM();
+        if (driver.getL1ButtonPressed()) {
+            if (Shared.liftDown) {
+                liftGPM();
+            } else {
+                lowerGPM();
+            }
+            Shared.liftDown = ! Shared.liftDown;
+        }
+    
 
         // Lift and Lower the Arm    
         if (driver.getTriangleButtonPressed() && (m_armSetpoint < GPMConstants.kArmMax)) 

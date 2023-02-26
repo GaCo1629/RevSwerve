@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 
 public final class Shared {
+    public static boolean liftDown = false ;
     public static int gridNumber = 0;
     public static int gridLvl = 0;
     public static boolean cone = false;
