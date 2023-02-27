@@ -118,7 +118,6 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         });
 
-    
     Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
 
     if (result.isPresent()) {
@@ -241,7 +240,7 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber( "Y Move", ySpeed);
     SmartDashboard.putNumber( "Rotate", rot);
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
-    SmartDashboard.putString("Target", String.format("X:%.2f Y:%.2f H:%.0f", Shared.targetX, Shared.targetY, Math.toDegrees(Shared.targetH)));
+    SmartDashboard.putString("Target", Shared.targetPose.toString());
   }
 
   public void newHeadingSetpoint(double newSetpoint) {
@@ -328,6 +327,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
     m_rearRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
   }
+  public CommandBase setXCmd() {return this.runOnce(() -> setX());}
 
   /**
    * Sets the swerve ModuleStates.

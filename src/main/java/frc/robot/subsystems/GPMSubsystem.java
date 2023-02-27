@@ -14,6 +14,8 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -96,89 +98,76 @@ public class GPMSubsystem extends SubsystemBase {
 
         // Look to see if we are finishing a ground pickup
         if (copilot_1.getRawButtonReleased(OIConstants.kCP1InGround)) {
-            newArmSetpoint(GPMConstants.kArmHome);
             liftGPM();    
+            newArmSetpoint(GPMConstants.kArmHome);
+        } 
+        
+        if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) {
+            newArmSetpoint(GPMConstants.kArmGround);
+            lowerGPM();    
+        }
+
+        // Are we holding the Ground button down?
+        if (copilot_1.getRawButton(OIConstants.kCP1InGround)) {
+            // Allow scoring piece to be selected
+            if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
+                Shared.cone = true;
+                newArmSetpoint(GPMConstants.kArmConeGround);
+            } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
+                Shared.cone = false;
+                newArmSetpoint(GPMConstants.kArmCubeGround);
+            }
         } else {
 
-            if (copilot_1.getRawButtonPressed(OIConstants.kCP1InGround)) {
-                newArmSetpoint(GPMConstants.kArmGround);
-                lowerGPM();    
+            // Human Player Pickup
+            if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) {
+                newArmSetpoint(GPMConstants.kArmHome);
+            } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
+                newArmSetpoint(GPMConstants.kArmHumCone);
+                Shared.cone = true;
+            } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
+                newArmSetpoint(GPMConstants.kArmHumCube);
+                Shared.cone = false;
             }
-
-            // Are we holding the Ground button down?
-            if (copilot_1.getRawButton(OIConstants.kCP1InGround)) {
-                // Allow scoring piece to be selected
-                if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
-                    Shared.cone = true;
-                    newArmSetpoint(GPMConstants.kArmConeGround);
-                } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
-                    Shared.cone = false;
-                    newArmSetpoint(GPMConstants.kArmCubeGround);
-                }
-            } else {
-
-                // Upright pickup or deposit  
-                if (copilot_1.getRawButtonPressed(OIConstants.kCP1Retract)) {
-                    newArmSetpoint(GPMConstants.kArmHome);
-                } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCone)) {
-                    newArmSetpoint(GPMConstants.kArmHumCone);
-                    Shared.cone = true;
-                } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1InCube)) {
-                    newArmSetpoint(GPMConstants.kArmHumCube);
-                    Shared.cone = false;
-                } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlBot)){
-                    Shared.gridLvl = 1;
-                    if (Shared.cone) {
-                        newArmSetpoint(GPMConstants.kArmConeBot);
-                    } else {
-                        newArmSetpoint(GPMConstants.kArmCubeBot);
-                    }
-                } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlMid)){
-                    Shared.gridLvl = 2;
-                    if (Shared.cone) {
-                        newArmSetpoint(GPMConstants.kArmConeMid);
-                    } else {
-                        newArmSetpoint(GPMConstants.kArmCubeMid);
-                    }
-                } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlTop)){
-                    Shared.gridLvl = 3;
-                    if (Shared.cone) {
-                        newArmSetpoint(GPMConstants.kArmConeTop);
-                    } else {
-                        newArmSetpoint(GPMConstants.kArmCubeTop);
-                    }
-                }
-                
-                if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
-                    Shared.cone = true;    
-                }
-                else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
-                    Shared.cone = false;   
-                }
+            
+            // Grid Scoring
+            if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlBot)){
+                Shared.gridLvl = 1;
+                setArmScorePosition();
+            } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlMid)){
+                Shared.gridLvl = 2;
+                setArmScorePosition();
+            } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlTop)){
+                Shared.gridLvl = 3;
+                setArmScorePosition();
+            } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCone)){ 
+                Shared.cone = true;   
+                setArmScorePosition(); 
+            } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1OutCube)){
+                Shared.cone = false;  
+                setArmScorePosition(); 
             }
         }
 
-        
-
         // Look for cone scoring position
         if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos1)){
-            setTargetPosition(1);
+            setGridTargetPosition(1);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos2)){
-            setTargetPosition(2);
+            setGridTargetPosition(2);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos3)){
-            setTargetPosition(3);
+            setGridTargetPosition(3);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos4)){
-            setTargetPosition(4);
+            setGridTargetPosition(4);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos5)){
-            setTargetPosition(5);
+            setGridTargetPosition(5);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos6)){
-            setTargetPosition(6);
+            setGridTargetPosition(6);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos7)){
-            setTargetPosition(7);
+            setGridTargetPosition(7);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos8)){
-            setTargetPosition(8);
+            setGridTargetPosition(8);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos9)){
-            setTargetPosition(9);
+            setGridTargetPosition(9);
         }
 
         if (driver.getRawButtonPressed(13)) {
@@ -207,9 +196,31 @@ public class GPMSubsystem extends SubsystemBase {
         } else {
             runCollector(collectorHoldingPower);
         }    
+    }
 
-        // power the motor arm to go to the arm setpoint
-        // runGPMPID();
+    void setArmScorePosition() {
+        switch (Shared.gridLvl) {
+            case 1:
+            if (Shared.cone) 
+                newArmSetpoint(GPMConstants.kArmConeBot);
+            else
+                newArmSetpoint(GPMConstants.kArmCubeBot);
+            break;
+
+            case 2:
+            if (Shared.cone) 
+                newArmSetpoint(GPMConstants.kArmConeMid);
+            else
+                newArmSetpoint(GPMConstants.kArmCubeMid);
+            break;
+                        
+            case 3:
+            if (Shared.cone) 
+                newArmSetpoint(GPMConstants.kArmConeTop);
+            else
+                newArmSetpoint(GPMConstants.kArmCubeTop);
+            break;
+        }                        
     }
 
     public void runGPMPID() {
@@ -235,18 +246,35 @@ public class GPMSubsystem extends SubsystemBase {
         SmartDashboard.putBoolean("Arm In Position", Shared.armInPosition);
     }
 
-    public void setTargetPosition(int position) {
+    public void setGridTargetPosition(int position) {
         // Save position number and calculate XY position
+        double X,Y,H;
         Shared.gridNumber = position;
         if (DriverStation.getAlliance() == Alliance.Red) {
-            Shared.targetX = 14.0;        
-            Shared.targetY = NavConstants.redYPos[position - 1];
-            Shared.targetH = 0;        
+            X = NavConstants.redGridX;        
+            Y = NavConstants.redGridY[position - 1];
+            H = 0;        
         } else {
-            Shared.targetX = 2.5;        
-            Shared.targetY = NavConstants.redYPos[9 - position];
-            Shared.targetH = Math.PI;        
+            X = NavConstants.blueGridX;        
+            Y = NavConstants.blueGridY[position - 1];
+            H = Math.PI;        
         }
+        Shared.targetPose = new Pose2d(X, Y, new Rotation2d(H));
+    }
+    
+    public void setFeederTargetPosition(int position) {
+        // Save position number and calculate XY position
+        double X,Y,H;
+        if (DriverStation.getAlliance() == Alliance.Red) {
+            X = NavConstants.redFeederX;        
+            Y = NavConstants.redFeederY[position - 1];
+            H = Math.PI;        
+        } else {
+            X = NavConstants.blueFeederX;        
+            Y = NavConstants.blueFeederY[position - 1];
+            H = 0;        
+        }
+        Shared.targetPose = new Pose2d(X, Y, new Rotation2d(H));
     }
     
     public void newArmSetpoint(double setpoint) {

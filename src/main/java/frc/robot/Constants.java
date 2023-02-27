@@ -237,7 +237,14 @@ public final class Constants {
   }
 
   public static final class NavConstants {
-    public static final double [] redYPos = {1.07,1.07,1.07, 2.75,2.75,2.75, 4.42,4.42,4.42};
+    public static final double [] redGridY  = {1.07,1.07,1.07, 2.75,2.75,2.75, 4.42,4.42,4.42};
+    public static final double [] blueGridY = {4.42,4.42,4.42, 2.75,2.75,2.75, 1.07,1.07,1.07};
+    public static final double [] redFeederY  = {6.0, 7.0};
+    public static final double [] blueFeederY  = {7.0,6.0};
+    public static final double redGridX     = 14.0;
+    public static final double blueGridX    =  2.5;
+    public static final double redFeederX   = 14.5;
+    public static final double blueFeederX  =  2.0;
   }
 }
  
