@@ -144,11 +144,12 @@ public final class Constants {
     public static final double kDriveDeadband = 0.05;
     public static final int kDriverGyroReset = 14;
     public static final int kCP1Retract = 1;
-    public static final int kCP1InCone = 2;
-    public static final int kCP1InCube = 3;
-    public static final int kCP1InGround = 4;
-    public static final int kCP1OutCone = 5;
-    public static final int kCP1OutCube = 6;
+    public static final int kCP1GroundCone = 2;
+    public static final int kCP1GroundCube = 3;
+    public static final int kCP1ExtendGround = 4;
+    public static final int kCP1FeederCone = 5;
+    public static final int kCP1FeederCube = 6;
+    public static final int kCP1ExtendFeeder = 7;
     public static final int kCP2Pos1 = 1;
     public static final int kCP2Pos2 = 2;
     public static final int kCP2Pos3 = 3;
@@ -223,8 +224,8 @@ public final class Constants {
     public static final double kArmCubeBot = 0.26;
     public static final double kArmCubeMid = 0.42;
     public static final double kArmCubeTop = 0.52;
-    public static final double kArmHumCone = 0.52;
-    public static final double kArmHumCube = 0.51;
+    public static final double kArmConeFeeder = 0.52;
+    public static final double kArmCubeFeeder = 0.51;
     public static final double kArmHome = 0.12;
     public static final double kArmGround = 0.36;
     public static final double kArmConeGround = 0.38;
@@ -233,6 +234,8 @@ public final class Constants {
     
     public static final double kArmBackstop = 0.13;   
     public static final double kArmBackstopTrigger = 0.14;   
+    public static final double kArmSafeToSpinn = 0.15;   
+    
     public static final double kArmBackPower = -0.05;
   }
 

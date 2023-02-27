@@ -28,6 +28,7 @@ import frc.robot.PhotonCameraWrapper;
 import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.GPMConstants;
 import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -133,7 +134,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     SmartDashboard.putString("Est Pose", getPose().toString());
     SmartDashboard.putString("Heading", String.format("%.2f (deg)", Math.toDegrees(getHeading())));
-    SmartDashboard.putNumber("Level", Shared.gridLvl);
+    SmartDashboard.putNumber("Level", Shared.gridLevel);
     SmartDashboard.putNumber("Position", Shared.gridNumber);
   }
 
@@ -194,12 +195,16 @@ public class DriveSubsystem extends SubsystemBase {
         case 6: xSpeed =  0.0; ySpeed =  0.2; break;
         default: xSpeed =  0.0; ySpeed =  0.0; break;
       }
+    } else if (driver.getCircleButton()) {
+      rot = 0;
+      xSpeed =  0.2; 
+      ySpeed =  0.0;
     }
 
     currentHeading = getHeading(); 
 
     // look to flip direction
-    if (driver.getR1ButtonPressed()) {
+    if (driver.getR1ButtonPressed() && (Shared.armPosition < GPMConstants.kArmSafeToSpinn)) {
       if (Math.abs(currentHeading) < Math.PI/2) {
         newHeadingSetpoint(Math.PI);
       } else {
@@ -215,18 +220,17 @@ public class DriveSubsystem extends SubsystemBase {
 
       // Check Auto Heading
     if (Math.abs(rot) > 0.02) {
-        headingLocked = false;
+      headingLocked = false;
     } else if (!headingLocked && isNotRotating()) {
-        headingLocked = true;
-        lockCurrentHeading(); 
+      headingLocked = true;
+      lockCurrentHeading(); 
     }
 
     if (headingLocked) {
-
       rotationCommanded = headingLockController.calculate(currentHeading, headingSetpoint);
-        if (Math.abs(rotationCommanded) < 0.1) {
-          rotationCommanded = 0;
-        } 
+      if (Math.abs(rotationCommanded) < 0.1) {
+        rotationCommanded = 0;
+      } 
     }
   
     // Convert the commanded speeds into the correct units for the drivetrain
