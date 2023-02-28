@@ -170,17 +170,19 @@ public final class Constants {
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
 
-    public static final double kPXController = 1;
-    public static final double kPYController = 1;
+    public static final double kPXController = 2;
+    public static final double kPYController = 2;
     public static final double kPThetaController = 1;
 
     public static final double kAutoMaxAngularSpeedRadiansPerSecond = 8.0;
     public static final double kAutoMaxAngularAccelerationRadiansPerSecondSquared = 8.0 ;
-
+    
     // Constraint for the motion profiled robot angle controller
+    public static final TrapezoidProfile.Constraints kTranslateControllerConstraints = new TrapezoidProfile.Constraints(3, 1);
+
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
       kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
-
+  
     public static final TrapezoidProfile.Constraints kHeadingLockConstraints = new TrapezoidProfile.Constraints(
       kAutoMaxAngularSpeedRadiansPerSecond, kAutoMaxAngularAccelerationRadiansPerSecondSquared);
   
@@ -246,8 +248,8 @@ public final class Constants {
     public static final double [] blueFeederY  = {7.0,6.0};
     public static final double redGridX     = 14.0;
     public static final double blueGridX    =  2.5;
-    public static final double redFeederX   = 14.5;
-    public static final double blueFeederX  =  2.0;
+    public static final double redFeederX   =  4.5;
+    public static final double blueFeederX  = 13.0;
   }
 }
  

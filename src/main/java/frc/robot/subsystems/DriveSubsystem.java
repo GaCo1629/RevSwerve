@@ -68,6 +68,9 @@ public class DriveSubsystem extends SubsystemBase {
   
   private PS4Controller driver;
   private ProfiledPIDController headingLockController;
+  private ProfiledPIDController xController;
+  private ProfiledPIDController yController;
+  
   private boolean headingLocked = false;
   private double  currentHeading = 0;
   private double  headingSetpoint = 0;  
@@ -89,6 +92,9 @@ public class DriveSubsystem extends SubsystemBase {
 
     headingLockController = new ProfiledPIDController(AutoConstants.kPHeadingLockController, 0, 0, AutoConstants.kHeadingLockConstraints );
     headingLockController.enableContinuousInput(-Math.PI, Math.PI);
+    xController = new ProfiledPIDController(AutoConstants.kPXController, 0, 0, AutoConstants.kTranslateControllerConstraints);
+    yController = new ProfiledPIDController(AutoConstants.kPYController, 0, 0, AutoConstants.kTranslateControllerConstraints);
+      
   }
  
   public void init() {
@@ -195,11 +201,7 @@ public class DriveSubsystem extends SubsystemBase {
         case 6: xSpeed =  0.0; ySpeed =  0.2; break;
         default: xSpeed =  0.0; ySpeed =  0.0; break;
       }
-    } else if (driver.getCircleButton()) {
-      rot = 0;
-      xSpeed =  0.2; 
-      ySpeed =  0.0;
-    }
+    } 
 
     currentHeading = getHeading(); 
 
@@ -238,13 +240,41 @@ public class DriveSubsystem extends SubsystemBase {
     double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond* DriveConstants.kSpeedFactor;
     double rotDelivered = rotationCommanded * DriveConstants.kMaxAngularSpeed * DriveConstants.kTurnFactor;
 
-    move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);
+    // Drive based on current goals.
+    if (driver.getCircleButton()) {
+
+      move(0.2, 0, rotDelivered, false);  // Drive Forward to collect game piece
+
+    } else if (driver.getL1Button()  && Shared.targetPoseSet  && false) {
+
+      if (driver.getL1ButtonPressed()) {
+        initDrivePIDs();  //Setup PID's based on target Pose
+      }
+      driveToLocation();        // Drive to target location using PIDs
+    
+    } else {
+      move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);  // Drive based on field centric commands
+    }
 
     SmartDashboard.putNumber( "X Move", xSpeed);
     SmartDashboard.putNumber( "Y Move", ySpeed);
     SmartDashboard.putNumber( "Rotate", rot);
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
     SmartDashboard.putString("Target", Shared.targetPose.toString());
+  }
+
+
+  public void initDrivePIDs() {
+    newHeadingSetpoint(Shared.targetPose.getRotation().getRadians());
+    xController.reset(getPose().getX());
+    yController.reset(getPose().getY());
+  }
+
+  public void driveToLocation() {
+    double xSpeedDelivered = -xController.calculate(getPose().getX(), Shared.targetPose.getX());
+    double ySpeedDelivered = -yController.calculate(getPose().getY(), Shared.targetPose.getY());
+    double rotDelivered    = headingLockController.calculate(headingLockController.calculate(currentHeading, headingSetpoint)) / 20;
+    move(xSpeedDelivered, ySpeedDelivered, rotDelivered, true);  // Drive based on field centric commands
   }
 
   public void newHeadingSetpoint(double newSetpoint) {

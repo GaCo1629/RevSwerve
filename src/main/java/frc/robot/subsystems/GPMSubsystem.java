@@ -67,7 +67,7 @@ public class GPMSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         runGPMPID();   
-        SmartDashboard.putString("Scoring", Shared.cone ? "Cone !" : "Cube !!");
+        SmartDashboard.putString("Scoring", Shared.cone ? "Cone" : "Cube");
     }
 
     public void init() {
@@ -121,6 +121,13 @@ public class GPMSubsystem extends SubsystemBase {
             newArmSetpoint(GPMConstants.kArmHome);
         } 
         
+        // Look to see if we are Starting or finishing a Feeder pickup
+        if (copilot_1.getRawButtonReleased(OIConstants.kCP2LvlBot) || 
+            copilot_1.getRawButtonReleased(OIConstants.kCP2LvlMid) || 
+            copilot_1.getRawButtonReleased(OIConstants.kCP2LvlTop)) {
+            newArmSetpoint(GPMConstants.kArmHome);
+        } 
+
         // Look for copilot selecting cone or cube for ground pickup
         if (copilot_1.getRawButtonPressed(OIConstants.kCP1GroundCone)) {
             setArmGroundPosition(true);
@@ -275,6 +282,10 @@ public class GPMSubsystem extends SubsystemBase {
     }
 
     public void setGridTargetPosition(int position) {
+
+        setFeederTargetPosition(false);
+
+        /* 
         // Save position number and calculate XY position
         double X,Y,H;
         Shared.gridNumber = position;
@@ -288,21 +299,23 @@ public class GPMSubsystem extends SubsystemBase {
             H = Math.PI;        
         }
         Shared.targetPose = new Pose2d(X, Y, new Rotation2d(H));
+        */
     }
     
-    public void setFeederTargetPosition(int position) {
+    public void setFeederTargetPosition(boolean rightSide) {
         // Save position number and calculate XY position
         double X,Y,H;
         if (DriverStation.getAlliance() == Alliance.Red) {
             X = NavConstants.redFeederX;        
-            Y = NavConstants.redFeederY[position - 1];
+            Y = NavConstants.redFeederY[rightSide ? 1 : 0];
             H = Math.PI;        
         } else {
             X = NavConstants.blueFeederX;        
-            Y = NavConstants.blueFeederY[position - 1];
+            Y = NavConstants.blueFeederY[rightSide ? 1 : 0];
             H = 0;        
         }
         Shared.targetPose = new Pose2d(X, Y, new Rotation2d(H));
+        Shared.targetPoseSet = true;
     }
     
     public void newArmSetpoint(double setpoint) {
