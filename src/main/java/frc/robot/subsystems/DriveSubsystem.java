@@ -245,13 +245,13 @@ public class DriveSubsystem extends SubsystemBase {
 
       move(0.2, 0, rotDelivered, false);  // Drive Forward to collect game piece
 
-    } else if (driver.getL1Button()  && Shared.targetPoseSet  && false) {
-
+    } else if (driver.getL1Button()  && Shared.targetPoseSet) {
+      /*
       if (driver.getL1ButtonPressed()) {
         initDrivePIDs();  //Setup PID's based on target Pose
       }
       driveToLocation();        // Drive to target location using PIDs
-    
+      */
     } else {
       move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);  // Drive based on field centric commands
     }

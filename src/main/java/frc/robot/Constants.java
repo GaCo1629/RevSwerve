@@ -39,7 +39,7 @@ public final class Constants {
                     0, 0,
                     0)); // Cam mounted facing forward, 5 in forward of center, 29 in, up from center.
 
-}
+  }
   
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
@@ -208,8 +208,8 @@ public final class Constants {
     public static final double kArmD = 0;
     public static final double kArmMaxI = 0.10;
 
-    public static final double kMaxVelocity = 0.3 ;
-    public static final double kMaxAcceleration = 1.0 ;
+    public static final double kMaxArmVelocity = 0.3 ;
+    public static final double kMaxArmAcceleration = 1.5 ;
 
    
     public static final double kConeCollectPower  = -0.5 ;
@@ -228,17 +228,25 @@ public final class Constants {
     public static final double kArmCubeTop = 0.52;
     public static final double kArmConeFeeder = 0.52;
     public static final double kArmCubeFeeder = 0.51;
-    public static final double kArmHome = 0.12;
+    public static final double kArmHome = 0.16;
     public static final double kArmGround = 0.36;
     public static final double kArmConeGround = 0.38;
     public static final double kArmCubeGround = 0.34;
     public static final double kArmMax  = 0.6;
     
-    public static final double kArmBackstop = 0.13;   
-    public static final double kArmBackstopTrigger = 0.14;   
-    public static final double kArmSafeToSpinn = 0.15;   
-    
+    public static final double kArmBackstop = 0.16;   
+    public static final double kArmBackstopTrigger = 0.18;   
+    public static final double kArmSafeToSpinn = 0.18;   
     public static final double kArmBackPower = -0.05;
+
+    public static final int    kLEDpwmID  = 9 ;
+    public static final double kCubeColor = 0.91;
+    public static final double kConeColor = 0.63;
+    public static final double kRedColor = 0.59;
+    public static final double kGreenColor = 0.75;
+    public static final double kBlueColor = 0.85;
+    public static final double kBlackColor = 0.99;
+        
   }
 
   public static final class NavConstants {

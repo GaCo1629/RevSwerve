@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -42,6 +43,7 @@ public class GPMSubsystem extends SubsystemBase {
     private CANSparkMax m_armMax = new CANSparkMax(GPMConstants.kArmCanId, MotorType.kBrushless);
     private CANSparkMax m_collectorMax = new CANSparkMax(GPMConstants.kCollectorCanId, MotorType.kBrushless);
     private AbsoluteEncoder m_armEncoder;
+    private Spark blinkyLEDs = new Spark(GPMConstants.kLEDpwmID); 
 
     private double m_armSetpoint ;
     private ProfiledPIDController m_armPID ;
@@ -57,11 +59,11 @@ public class GPMSubsystem extends SubsystemBase {
         this.copilot_2 = copilot_2;
 
         m_armPID = new ProfiledPIDController(GPMConstants.kArmP, GPMConstants.kArmI, GPMConstants.kArmD,
-                                            new Constraints(GPMConstants.kMaxVelocity, GPMConstants.kMaxAcceleration));
+                                            new Constraints(GPMConstants.kMaxArmVelocity, GPMConstants.kMaxArmAcceleration));
         m_armPID.setIntegratorRange(-GPMConstants.kArmMaxI, GPMConstants.kArmMaxI);
        
-        // Setup encoders and PID controllers for the driving and turning SPARKS MAX.
         m_armEncoder = m_armMax.getAbsoluteEncoder(Type.kDutyCycle);  
+        blinkyLEDs.set(DriverStation.getAlliance() == Alliance.Blue ? GPMConstants.kBlueColor : GPMConstants.kRedColor);
     }
 
     @Override
@@ -76,7 +78,11 @@ public class GPMSubsystem extends SubsystemBase {
         for (int i=1; i < 10; i++) {
             copilot_1.getRawButtonPressed(i);
             copilot_2.getRawButtonPressed(i);
+            copilot_1.getRawButtonReleased(i);
+            copilot_2.getRawButtonReleased(i);
         } 
+        SmartDashboard.putString("release", "No"); // DEBUG
+            
     }
     
     /**
@@ -121,13 +127,7 @@ public class GPMSubsystem extends SubsystemBase {
             newArmSetpoint(GPMConstants.kArmHome);
         } 
         
-        // Look to see if we are Starting or finishing a Feeder pickup
-        if (copilot_1.getRawButtonReleased(OIConstants.kCP2LvlBot) || 
-            copilot_1.getRawButtonReleased(OIConstants.kCP2LvlMid) || 
-            copilot_1.getRawButtonReleased(OIConstants.kCP2LvlTop)) {
-            newArmSetpoint(GPMConstants.kArmHome);
-        } 
-
+        
         // Look for copilot selecting cone or cube for ground pickup
         if (copilot_1.getRawButtonPressed(OIConstants.kCP1GroundCone)) {
             setArmGroundPosition(true);
@@ -151,8 +151,17 @@ public class GPMSubsystem extends SubsystemBase {
         } else if (copilot_2.getRawButtonPressed(OIConstants.kCP2LvlTop)){
             setArmScorePosition(3);
         } 
-        
 
+
+        // Look to see if we are finishing a Scoring cycle
+        if (copilot_2.getRawButtonReleased(OIConstants.kCP2LvlBot) || 
+            copilot_2.getRawButtonReleased(OIConstants.kCP2LvlMid) || 
+            copilot_2.getRawButtonReleased(OIConstants.kCP2LvlTop)) {
+            SmartDashboard.putString("release", "Yes");
+            newArmSetpoint(GPMConstants.kArmHome);
+        } 
+
+        
         // Look for cone scoring position
         if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos1)){
             setGridTargetPosition(1);
@@ -195,6 +204,11 @@ public class GPMSubsystem extends SubsystemBase {
         } else {
             runCollector(collectorHoldingPower);
         }    
+
+
+        // Set the collector color
+        blinkyLEDs.set(Shared.cone ? GPMConstants.kConeColor : GPMConstants.kCubeColor);
+    
     }
 
     void setArmGroundPosition(boolean isCone) {
@@ -266,7 +280,7 @@ public class GPMSubsystem extends SubsystemBase {
         } 
 
         // lock arm against backstop
-        if ((m_armSetpoint < GPMConstants.kArmBackstop) && (Shared.armPosition < GPMConstants.kArmBackstopTrigger)) {
+        if ((m_armSetpoint <= GPMConstants.kArmBackstop) && (Shared.armPosition < GPMConstants.kArmBackstopTrigger)) {
             armOutput = GPMConstants.kArmBackPower;
         } 
 
