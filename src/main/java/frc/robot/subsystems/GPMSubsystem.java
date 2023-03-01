@@ -64,6 +64,7 @@ public class GPMSubsystem extends SubsystemBase {
        
         m_armEncoder = m_armMax.getAbsoluteEncoder(Type.kDutyCycle);  
         blinkyLEDs.set(DriverStation.getAlliance() == Alliance.Blue ? GPMConstants.kBlueColor : GPMConstants.kRedColor);
+        liftGPM();
     }
 
     @Override

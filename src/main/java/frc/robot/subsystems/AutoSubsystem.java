@@ -23,21 +23,41 @@ public class AutoSubsystem extends SubsystemBase {
      
     private DriveSubsystem          m_robotDrive ;
     private GPMSubsystem            m_GPM; 
-    private TrajectoryConfig        m_config;
-    private ProfiledPIDController   m_thetaController;
+    private TrajectoryConfig        m_slowConfig;
+    private TrajectoryConfig        m_slowRevConfig;
+    private TrajectoryConfig        m_fastConfig;
+
+    private PIDController           m_xController;
+    private PIDController           m_yController;    
+    private ProfiledPIDController   m_hController;
         
     public AutoSubsystem(DriveSubsystem robotDrive, GPMSubsystem GPM) {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
-        m_config = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond,AutoConstants.kMaxAccelerationMetersPerSecondSquared);
-        m_config.setKinematics(DriveConstants.kDriveKinematics);
-        m_thetaController = new ProfiledPIDController(AutoConstants.kPThetaController, 0, 0, AutoConstants.kHeadingLockConstraints);
-        m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        
+        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond,AutoConstants.kMaxAccelerationMetersPerSecondSquared);
+        m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
+
+        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 5, 
+                                                AutoConstants.kMaxAccelerationMetersPerSecondSquared / 2);
+        m_slowConfig.setKinematics(DriveConstants.kDriveKinematics);
+
+        m_slowRevConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 5, 
+        AutoConstants.kMaxAccelerationMetersPerSecondSquared / 2);
+        m_slowRevConfig.setKinematics(DriveConstants.kDriveKinematics);
+        m_slowRevConfig.setReversed(true);
+
+        m_xController = new PIDController(AutoConstants.kPXController, 0, 0);
+        m_yController = new PIDController(AutoConstants.kPYController, 0, 0);
+
+        m_hController = new ProfiledPIDController(AutoConstants.kPThetaController, 0, 0, AutoConstants.kHeadingLockConstraints);
+        m_hController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
 
     public void init() {
         m_robotDrive.resetGyroToZero();
+        m_GPM.liftGPM();
     }
 
     public SwerveControllerCommand runTrajectory( Trajectory myPath) {
@@ -45,29 +65,29 @@ public class AutoSubsystem extends SubsystemBase {
             myPath,
             m_robotDrive::getPose, // Functional interface to feed supplier
             DriveConstants.kDriveKinematics,
-            new PIDController(AutoConstants.kPXController, 0, 0),
-            new PIDController(AutoConstants.kPYController, 0, 0),
-            m_thetaController,
+            m_xController,
+            m_yController,
+            m_hController,
             m_robotDrive::setModuleStates,
             m_robotDrive);
     }
 
-    public Command getBasicAuto(){
+    public Command getRed2Auto(){
+
+        // Protect in case we havent seen the target yet
+        if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+            Shared.currentPose = new Pose2d(14.5, 2.74, new Rotation2d(0));
+        }
 
         // Basic trajectory to follow. All units in meters.
-        Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+        Trajectory red2ToUpRamp = TrajectoryGenerator.generateTrajectory(
             // Start at the origin facing the +X 
-            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(135) ),
-            // Pass through these two interior waypoints, making an 's' curve path
-            List.of(    new Translation2d(13.5, 4.8), 
-                        new Translation2d(12.5, 4.8),
-                        new Translation2d(11.5, 4.8),
-                        new Translation2d(10.5, 4.2)
-                        ),
-            new Pose2d(10.5, 3.5, new Rotation2d(0)),
-            m_config);
-
-        // Run path following command, then stop at the end.
+            Shared.currentPose, 
+            List.of(new Translation2d(13.5, 2.74)),
+            new Pose2d(12.2, 2.74, new Rotation2d(0)),
+            m_slowRevConfig);
+    
+            // Run path following command, then stop at the end.
         return Commands.sequence(
             m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
             Commands.waitUntil(Shared.inPosition),
@@ -76,9 +96,52 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.waitUntil(Shared.inPosition), 
-            runTrajectory(exampleTrajectory),           
+            runTrajectory(red2ToUpRamp),           
+            Commands.repeatingSequence(m_robotDrive.setXCmd())
+        );
+
+    }
+
+    public Command getRed3Auto(){
+
+        // Protect in case we havent seen the target yet
+        if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+            Shared.currentPose = new Pose2d(14.5, 4.4, new Rotation2d(0.0));
+        }
+
+        // Basic trajectory to follow. All units in meters.
+        Trajectory red3ToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+            // Start at the origin facing the +X 
+            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(135) ),
+            // Pass through these two interior waypoints, making an 's' curve path
+            List.of(    new Translation2d(13.5, 4.8), 
+                        new Translation2d(12.5, 4.8),
+                        new Translation2d(11.5, 4.8),
+                        new Translation2d(10.5, 4.2)
+                        ),
+            new Pose2d(10.5, 2.9, new Rotation2d(0)),
+            m_fastConfig);
+
+        Trajectory red3UpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
+            // Start From outside the ramp 
+            new Pose2d(10.3, 2.9, new Rotation2d(0)),
+            List.of(    new Translation2d(12.3, 2.8)),
+            new Pose2d(12.35, 2.9, new Rotation2d(0)),
+            m_slowConfig);
+    
+            // Run path following command, then stop at the end.
+        return Commands.sequence(
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
+            Commands.waitUntil(Shared.inPosition),
+            m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
+            Commands.waitSeconds(1),
+            m_GPM.runCollectorCmd(0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            Commands.waitUntil(Shared.inPosition), 
+            runTrajectory(red3ToOutsideRamp),           
             m_robotDrive.stopCmd(),
-            m_robotDrive.lockCurrentHeadingCmd()
+            runTrajectory(red3UpRampFromOutsideRamp),
+            Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
 
     }

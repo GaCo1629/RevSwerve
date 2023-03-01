@@ -209,7 +209,7 @@ public final class Constants {
     public static final double kArmMaxI = 0.10;
 
     public static final double kMaxArmVelocity = 0.3 ;
-    public static final double kMaxArmAcceleration = 1.5 ;
+    public static final double kMaxArmAcceleration = 1.0 ;
 
    
     public static final double kConeCollectPower  = -0.5 ;
@@ -226,7 +226,7 @@ public final class Constants {
     public static final double kArmCubeBot = 0.26;
     public static final double kArmCubeMid = 0.42;
     public static final double kArmCubeTop = 0.52;
-    public static final double kArmConeFeeder = 0.52;
+    public static final double kArmConeFeeder = 0.53;
     public static final double kArmCubeFeeder = 0.51;
     public static final double kArmHome = 0.16;
     public static final double kArmGround = 0.36;
