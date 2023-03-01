@@ -15,6 +15,7 @@ public final class Shared {
     public static Pose2d currentPose = new Pose2d();
     public static Pose2d targetPose  = new Pose2d();
     public static boolean targetPoseSet = false;
+    public static boolean useAprilTags = true;
 
     public static BooleanSupplier inPosition = () -> armInPosition;
     

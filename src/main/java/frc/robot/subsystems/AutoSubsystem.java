@@ -35,7 +35,8 @@ public class AutoSubsystem extends SubsystemBase {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
         
-        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond,AutoConstants.kMaxAccelerationMetersPerSecondSquared);
+        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 2,
+                                AutoConstants.kMaxAccelerationMetersPerSecondSquared);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
 
         m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 5, 
@@ -58,6 +59,7 @@ public class AutoSubsystem extends SubsystemBase {
     public void init() {
         m_robotDrive.resetGyroToZero();
         m_GPM.liftGPM();
+        Shared.useAprilTags = true;
     }
 
     public SwerveControllerCommand runTrajectory( Trajectory myPath) {
@@ -112,21 +114,21 @@ public class AutoSubsystem extends SubsystemBase {
         // Basic trajectory to follow. All units in meters.
         Trajectory red3ToOutsideRamp = TrajectoryGenerator.generateTrajectory(
             // Start at the origin facing the +X 
-            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(135) ),
+            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(180) ),
             // Pass through these two interior waypoints, making an 's' curve path
-            List.of(    new Translation2d(13.5, 4.8), 
-                        new Translation2d(12.5, 4.8),
-                        new Translation2d(11.5, 4.8),
-                        new Translation2d(10.5, 4.2)
+            List.of(    new Translation2d(13.5, 4.4), 
+                        new Translation2d(12.5, 4.4),
+                        new Translation2d(11.5, 4.4),
+                        new Translation2d(10.5, 3.9)
                         ),
-            new Pose2d(10.5, 2.9, new Rotation2d(0)),
+            new Pose2d(10.5, 2.74, new Rotation2d(0)),
             m_fastConfig);
 
         Trajectory red3UpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
             // Start From outside the ramp 
-            new Pose2d(10.3, 2.9, new Rotation2d(0)),
-            List.of(    new Translation2d(12.3, 2.8)),
-            new Pose2d(12.35, 2.9, new Rotation2d(0)),
+            new Pose2d(10.6, 2.7, new Rotation2d(0)),
+            List.of(new Translation2d(12.45, 2.7)),
+            new Pose2d(12.5, 2.7, new Rotation2d(0)),
             m_slowConfig);
     
             // Run path following command, then stop at the end.
@@ -139,7 +141,8 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.waitUntil(Shared.inPosition), 
             runTrajectory(red3ToOutsideRamp),           
-            m_robotDrive.stopCmd(),
+            // m_robotDrive.stopCmd(),
+            // m_robotDrive.useAprilTagsCmd(false),
             runTrajectory(red3UpRampFromOutsideRamp),
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );

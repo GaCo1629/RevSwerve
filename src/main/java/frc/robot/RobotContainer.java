@@ -64,6 +64,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // Create config for trajectory
-    return m_Auto.getRed2Auto();
+    return m_Auto.getRed3Auto();
   }
 }

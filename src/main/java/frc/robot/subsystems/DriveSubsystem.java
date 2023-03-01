@@ -101,6 +101,7 @@ public class DriveSubsystem extends SubsystemBase {
     setFieldOffsets();
     lockCurrentHeading();
     resetOdometry(Shared.currentPose);
+    useAprilTags(true);
     for (int i=1; i < 10; i++) {
       driver.getRawButtonPressed(i);
     }
@@ -125,14 +126,16 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         });
 
-    Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
+    if (Shared.useAprilTags) {
+      Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
 
-    if (result.isPresent()) {
-        EstimatedRobotPose camPose = result.get();
-        Pose2d camPose2d = camPose.estimatedPose.toPose2d();
-        Pose2d gyroCamPose2d = new Pose2d(camPose2d.getTranslation(), getRotation2d());  // use gyro heading
-        
-        m_odometry.addVisionMeasurement(gyroCamPose2d, camPose.timestampSeconds);
+      if (result.isPresent()) {
+          EstimatedRobotPose camPose = result.get();
+          Pose2d camPose2d = camPose.estimatedPose.toPose2d();
+          Pose2d gyroCamPose2d = new Pose2d(camPose2d.getTranslation(), getRotation2d());  // use gyro heading
+          
+          m_odometry.addVisionMeasurement(gyroCamPose2d, camPose.timestampSeconds);
+      }
     }
      
     // Share current position
@@ -288,13 +291,17 @@ public class DriveSubsystem extends SubsystemBase {
   }
   public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
 
+  public void useAprilTags(boolean useTags) {
+    Shared.useAprilTags = useTags;
+  }
+  public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
+
 
   public boolean isNotRotating() {
     SmartDashboard.putNumber("Rotate rate", m_gyro.getRate());
 
     return (Math.abs(m_gyro.getRate()) < AutoConstants.kNotRotating);
   }
-
 
   public double resetGyroToZero() {
     m_gyro.reset();
