@@ -70,7 +70,7 @@ public class GPMSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         runGPMPID();   
-        SmartDashboard.putString("Scoring", Shared.cone ? "Cone" : "Cube");
+        SmartDashboard.putBoolean("Scoring", Shared.cone);
     }
 
     public void init() {
@@ -292,7 +292,6 @@ public class GPMSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Arm Motor", armOutput);
         SmartDashboard.putNumber("Arm Angle (deg)", Shared.armPosition);
         SmartDashboard.putNumber("Arm Setpoint (deg)", m_armSetpoint);
-        SmartDashboard.putString("Arm Lift", Shared.liftDown ? "DOWN" : "UP");
         SmartDashboard.putBoolean("Arm In Position", Shared.armInPosition);
     }
 

@@ -7,6 +7,8 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.AutoSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
@@ -43,6 +45,8 @@ public class RobotContainer {
     // Configure default commands
     m_robotDrive.setDefaultCommand(new RunCommand(() -> m_robotDrive.drive(true, true),m_robotDrive));
     m_GPM.setDefaultCommand(new RunCommand(() -> m_GPM.teleopRun(),m_GPM));
+
+    
   }
 
   /**
@@ -63,7 +67,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // Create config for trajectory
-    return m_Auto.getRed3Auto();
+    // redirect to the auto subsystem
+    return(m_Auto.getAutonomousCommand());
   }
 }
