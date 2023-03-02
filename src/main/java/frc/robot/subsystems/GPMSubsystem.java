@@ -81,9 +81,8 @@ public class GPMSubsystem extends SubsystemBase {
             copilot_2.getRawButtonPressed(i);
             copilot_1.getRawButtonReleased(i);
             copilot_2.getRawButtonReleased(i);
-        } 
-        SmartDashboard.putString("release", "No"); // DEBUG
             
+        } 
     }
     
     /**

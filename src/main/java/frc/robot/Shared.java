@@ -8,7 +8,7 @@ public final class Shared {
     public static boolean liftDown = false ;
     public static int gridNumber = 0;
     public static int gridLevel = 0;
-    public static boolean cone = false;
+    public static boolean cone = true;
     public static double armSetpoint = 0;
     public static double armPosition = 0;
     public static boolean armInPosition = true;

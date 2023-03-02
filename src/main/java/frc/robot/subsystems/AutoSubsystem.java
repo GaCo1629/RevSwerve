@@ -10,6 +10,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,16 +35,17 @@ public class AutoSubsystem extends SubsystemBase {
     private PIDController           m_yController;    
     private ProfiledPIDController   m_hController;
     
-    private final   int             m_numAutos = 4;
+    private final   int             m_numAutos = 6;
     private final   String[]        m_autoNames = {"DO NOTHING", 
                                     "WALL start with RAMP", 
                                     "CENTER start with RAMP", 
-                                    "FEEDER Start with Ramp" };
+                                    "FEEDER Start with RAMP",
+                                    "Wall start no ramp",
+                                    "feeder start no ramp" };
 
     // Add commands to the autonomous command chooser
     private final SendableChooser<Integer> m_chooser = new SendableChooser<>();
-  
-        
+          
     public AutoSubsystem(DriveSubsystem robotDrive, GPMSubsystem GPM) {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
@@ -72,10 +75,7 @@ public class AutoSubsystem extends SubsystemBase {
         for (int m = 1; m < m_numAutos; m++) {
             m_chooser.addOption(m_autoNames[m], m);
         }
-     
-    
     }
-
 
     public void init() {
         m_robotDrive.resetGyroToZero();
@@ -85,20 +85,29 @@ public class AutoSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putString("Auto Mode", String.format("(%d) %s", m_chooser.getSelected(), m_autoNames[m_chooser.getSelected()] ));   
+        if (m_chooser != null) {
+            int selected = m_chooser.getSelected();
+            SmartDashboard.putString("Auto Mode", String.format("(%d) %s", selected, m_autoNames[selected] ));  
+        } 
     }
 
     public Command getAutonomousCommand() {
         switch (m_chooser.getSelected()) {
             case 1:
-            return getRedWallAuto();
+            return getWallRampAuto();
         
             case 2:
             default:
-            return getRedCenterAuto();
+            return getCenterRampAuto();
         
             case 3:
-            return getRedFeederAuto();
+            return getFeederRampAuto();
+        
+            case 4:
+            return getWallNoRampAuto();
+        
+            case 5:
+            return getFeederNoRampAuto();
         }
     }
     
@@ -114,31 +123,64 @@ public class AutoSubsystem extends SubsystemBase {
             m_robotDrive);
     }
 
-    public Command getRedWallAuto(){
-        // Protect in case we havent seen the target yet
-        if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-            Shared.currentPose = new Pose2d(14.5, 0.97, new Rotation2d(0.0));
+    // ================================================================================================
+    public Command getWallRampAuto(){
+
+        Trajectory wallToOutsideRamp;
+        Trajectory wallUpRampFromOutsideRamp;
+
+        if (DriverStation.getAlliance() == Alliance.Red) {
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(14.5, 0.97, new Rotation2d(0.0));
+            }
+
+           // Basic trajectory to follow from RED side. All units in meters.
+            wallToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(-150) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(13.5, 0.87), 
+                            new Translation2d(12.5, 0.87),
+                            new Translation2d(11.5, 0.87),
+                            new Translation2d(10.5, 1.47)
+                            ),
+                new Pose2d(10.5, 2.7, new Rotation2d(0)),
+                m_fastConfig);
+
+            wallUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start From outside the ramp 
+                new Pose2d(10.6, 2.7, new Rotation2d(0)),
+                List.of(new Translation2d(12.45, 2.7)),
+                new Pose2d(12.5, 2.7, new Rotation2d(0)),
+                m_slowConfig);
+        } else {
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(2.03, 0.97, new Rotation2d(Math.PI));
+            }
+
+            // Basic trajectory to follow from BLUE side. All units in meters.
+            wallToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(-30) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(3.03, 0.87), 
+                            new Translation2d(4.03, 0.87),
+                            new Translation2d(5.03, 0.87),
+                            new Translation2d(6.03, 1.47)
+                            ),
+                new Pose2d(6.03, 2.7, new Rotation2d(Math.PI)),
+                m_fastConfig);
+
+            wallUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start From outside the ramp 
+                new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
+                List.of(new Translation2d(4.08, 2.7)),
+                new Pose2d(4.03, 2.7, new Rotation2d(Math.PI)),
+                m_slowConfig);
+
         }
-
-        // Basic trajectory to follow. All units in meters.
-        Trajectory red1ToOutsideRamp = TrajectoryGenerator.generateTrajectory(
-            // Start at the origin facing the +X 
-            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(-150) ),
-            // Pass through these two interior waypoints, making an 's' curve path
-            List.of(    new Translation2d(13.5, 0.87), 
-                        new Translation2d(12.5, 0.87),
-                        new Translation2d(11.5, 0.87),
-                        new Translation2d(10.5, 1.47)
-                        ),
-            new Pose2d(10.5, 2.7, new Rotation2d(0)),
-            m_fastConfig);
-
-        Trajectory red3UpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
-            // Start From outside the ramp 
-            new Pose2d(10.6, 2.7, new Rotation2d(0)),
-            List.of(new Translation2d(12.45, 2.7)),
-            new Pose2d(12.5, 2.7, new Rotation2d(0)),
-            m_slowConfig);
 
             // Run path following command, then stop at the end.
         return Commands.sequence(
@@ -148,32 +190,62 @@ public class AutoSubsystem extends SubsystemBase {
             Commands.waitSeconds(1),
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            runTrajectory(wallToOutsideRamp),  
             Commands.waitUntil(Shared.inPosition), 
-            runTrajectory(red1ToOutsideRamp),           
-            // m_robotDrive.stopCmd(),
             // m_robotDrive.useAprilTagsCmd(false),
-            runTrajectory(red3UpRampFromOutsideRamp),
+            runTrajectory(wallUpRampFromOutsideRamp),
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
     }
 
 
-    public Command getRedCenterAuto(){
+    // ================================================================================================
+    public Command getWallNoRampAuto(){
 
-        // Protect in case we havent seen the target yet
-        if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-            Shared.currentPose = new Pose2d(14.5, 2.74, new Rotation2d(0));
+        Trajectory wallToOutsideRamp;
+        
+        if (DriverStation.getAlliance() == Alliance.Red) {
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(14.5, 0.97, new Rotation2d(0.0));
+            }
+
+           // Basic trajectory to follow from RED side. All units in meters.
+            wallToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(-150) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(13.5, 0.87), 
+                            new Translation2d(12.5, 0.87),
+                            new Translation2d(11.5, 0.87),
+                            new Translation2d(10.5, 1.37)
+                            ),
+                new Pose2d(10.5, 1.87, new Rotation2d(0)),
+                m_fastConfig);
+
+        } else {
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(2.03, 0.97, new Rotation2d(Math.PI));
+            }
+
+            // Basic trajectory to follow from BLUE side. All units in meters.
+               
+            wallToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(-30) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(3.03, 0.87), 
+                            new Translation2d(4.03, 0.87),
+                            new Translation2d(5.03, 0.87),
+                            new Translation2d(6.03, 1.37)
+                            ),
+                new Pose2d(6.03, 1.87, new Rotation2d(Math.PI)),
+                m_fastConfig);
+
         }
 
-        // Basic trajectory to follow. All units in meters.
-        Trajectory red2ToUpRamp = TrajectoryGenerator.generateTrajectory(
-            // Start at the origin facing the +X 
-            Shared.currentPose, 
-            List.of(new Translation2d(13.5, 2.74)),
-            new Pose2d(12.45, 2.7, new Rotation2d(0)),
-            m_slowRevConfig);
-    
-            // Run path following command, then stop at the end.
+        // Run path following command, then stop at the end.
         return Commands.sequence(
             m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
             Commands.waitUntil(Shared.inPosition),
@@ -182,39 +254,184 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.waitUntil(Shared.inPosition), 
-            runTrajectory(red2ToUpRamp),           
+
+            //m_robotDrive.useAprilTagsCmd(false),
+            runTrajectory(wallToOutsideRamp),  
+            Commands.repeatingSequence(m_robotDrive.stopCmd())
+        );
+    }
+
+    // ================================================================================================
+    public Command getCenterRampAuto(){
+
+        Trajectory centerToUpRamp;
+
+        if (DriverStation.getAlliance() == Alliance.Red) {
+
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(14.5, 2.74, new Rotation2d(0));
+            }
+
+            // Basic trajectory to follow on RED side. All units in meters.
+            centerToUpRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                Shared.currentPose, 
+                List.of(new Translation2d(13.5, 2.74)),
+                new Pose2d(12.45, 2.7, new Rotation2d(0)),
+                m_slowRevConfig);
+        } else {
+
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(2.03, 2.74, new Rotation2d(Math.PI));
+            }
+ 
+            // Basic trajectory to follow on BLUE side. All units in meters.
+            centerToUpRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                Shared.currentPose, 
+                List.of(new Translation2d(3.03, 2.74)),
+                new Pose2d(4.1, 2.7, new Rotation2d(Math.PI)),
+                m_slowRevConfig);
+        }
+    
+        // Run path following command, then stop at the end.
+        return Commands.sequence(
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
+            Commands.waitUntil(Shared.inPosition),
+            m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
+            Commands.waitSeconds(1),
+            m_GPM.runCollectorCmd(0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            //Commands.waitUntil(Shared.inPosition), 
+            runTrajectory(centerToUpRamp),           
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
     }
 
-    public Command getRedFeederAuto(){
+    // ================================================================================================
+    public Command getFeederRampAuto(){
 
-        // Protect in case we havent seen the target yet
-        if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-            Shared.currentPose = new Pose2d(14.6, 4.4, new Rotation2d(0.0));
+        Trajectory feederToOutsideRamp;
+        Trajectory feederUpRampFromOutsideRamp;
+
+        if (DriverStation.getAlliance() == Alliance.Red) {
+
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(14.6, 4.5, new Rotation2d(0.0));
+            }
+
+            // Basic trajectory to follow in RED. All units in meters.
+            feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(160) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(13.5, 4.7), 
+                            new Translation2d(12.5, 4.7),
+                            new Translation2d(11.5, 4.7),
+                            new Translation2d(10.5, 3.9)
+                            ),
+                new Pose2d(10.5, 2.74, new Rotation2d(0)),
+                m_fastConfig);
+
+            feederUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start From outside the ramp 
+                new Pose2d(10.6, 2.7, new Rotation2d(0)),
+                List.of(new Translation2d(12.45, 2.7)),
+                new Pose2d(12.5, 2.7, new Rotation2d(0)),
+                m_slowConfig);
+        } else {
+
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(2.03, 4.5, new Rotation2d(Math.PI));
+            }
+
+            // Basic trajectory to follow in BLUE. All units in meters.
+            feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(30) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(3.03, 4.7), 
+                            new Translation2d(4.03, 4.7),
+                            new Translation2d(5.03, 4.7),
+                            new Translation2d(6.03, 3.9)
+                            ),
+                new Pose2d(6.03, 2.74, new Rotation2d(Math.PI)),
+                m_fastConfig);
+
+            feederUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start From outside the ramp 
+                new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
+                List.of(new Translation2d(4.08, 2.7)),
+                new Pose2d(4.03, 2.7, new Rotation2d(Math.PI)),
+                m_slowConfig);
         }
+            
+        // Run path following command, then stop at the end.
+        return Commands.sequence(
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
+            Commands.waitUntil(Shared.inPosition),
+            m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
+            Commands.waitSeconds(1),
+            m_GPM.runCollectorCmd(0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            runTrajectory(feederToOutsideRamp),           
+            // m_robotDrive.useAprilTagsCmd(false),
+            Commands.waitUntil(Shared.inPosition), 
+            runTrajectory(feederUpRampFromOutsideRamp),
+            Commands.repeatingSequence(m_robotDrive.setXCmd())
+        );
 
-        // Basic trajectory to follow. All units in meters.
-        Trajectory red3ToOutsideRamp = TrajectoryGenerator.generateTrajectory(
-            // Start at the origin facing the +X 
-            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(160) ),
-            // Pass through these two interior waypoints, making an 's' curve path
-            List.of(    new Translation2d(13.5, 4.7), 
-                        new Translation2d(12.5, 4.7),
-                        new Translation2d(11.5, 4.7),
-                        new Translation2d(10.5, 3.9)
-                        ),
-            new Pose2d(10.5, 2.74, new Rotation2d(0)),
-            m_fastConfig);
+    }
 
-        Trajectory red3UpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
-            // Start From outside the ramp 
-            new Pose2d(10.6, 2.7, new Rotation2d(0)),
-            List.of(new Translation2d(12.45, 2.7)),
-            new Pose2d(12.5, 2.7, new Rotation2d(0)),
-            m_slowConfig);
-    
-            // Run path following command, then stop at the end.
+    // ================================================================================================
+    public Command getFeederNoRampAuto(){
+
+        Trajectory feederToOutsideRamp;
+
+        if (DriverStation.getAlliance() == Alliance.Red) {
+
+            // Protect in case we havent seen the target yet
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(14.6, 4.5, new Rotation2d(0.0));
+            }
+
+            // Basic trajectory to follow in RED. All units in meters.
+            feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(160) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(13.5, 4.7), 
+                            new Translation2d(12.5, 4.7),
+                            new Translation2d(11.5, 4.7),
+                            new Translation2d(10.5, 4.2)
+                            ),
+                new Pose2d(10.5, 3.7, new Rotation2d(0)),
+                m_fastConfig);
+        } else {
+
+            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
+                Shared.currentPose = new Pose2d(2.03, 4.5, new Rotation2d(Math.PI));
+            }
+
+            // Basic trajectory to follow in BLUE. All units in meters.
+            feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
+                // Start at the origin facing the +X 
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(30) ),
+                // Pass through these two interior waypoints, making an 's' curve path
+                List.of(    new Translation2d(3.03, 4.7), 
+                            new Translation2d(4.03, 4.7),
+                            new Translation2d(5.03, 4.7),
+                            new Translation2d(6.03, 4.2)
+                            ),
+                new Pose2d(6.03, 3.7, new Rotation2d(Math.PI)),
+                m_fastConfig);
+        }
+            
+        // Run path following command, then stop at the end.
         return Commands.sequence(
             m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
             Commands.waitUntil(Shared.inPosition),
@@ -223,13 +440,10 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.waitUntil(Shared.inPosition), 
-            runTrajectory(red3ToOutsideRamp),           
-            // m_robotDrive.stopCmd(),
-            // m_robotDrive.useAprilTagsCmd(false),
-            runTrajectory(red3UpRampFromOutsideRamp),
-            Commands.repeatingSequence(m_robotDrive.setXCmd())
+            //m_robotDrive.useAprilTagsCmd(false),
+            runTrajectory(feederToOutsideRamp),           
+            Commands.repeatingSequence(m_robotDrive.stopCmd())
         );
-
     }
 
 }
