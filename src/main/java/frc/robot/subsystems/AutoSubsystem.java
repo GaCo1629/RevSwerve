@@ -32,6 +32,12 @@ public class AutoSubsystem extends SubsystemBase {
     private PIDController           m_xController;
     private PIDController           m_yController;    
     private ProfiledPIDController   m_hController;
+    
+    private final   int             m_numAutos = 4;
+    private final   String[]        m_autoNames = {"DO NOTHING", 
+                                    "WALL start with RAMP", 
+                                    "CENTER start with RAMP", 
+                                    "FEEDER Start with Ramp" };
 
     // Add commands to the autonomous command chooser
     private final SendableChooser<Integer> m_chooser = new SendableChooser<>();
@@ -63,9 +69,11 @@ public class AutoSubsystem extends SubsystemBase {
         // Put the chooser on the dashboard
         SmartDashboard.putData(m_chooser);  
         m_chooser.setDefaultOption("Choose an Auto", 0);
-        m_chooser.addOption("Wall", 1);
-        m_chooser.addOption("Center", 2);
-        m_chooser.addOption("Feeder", 3);
+        for (int m = 1; m < m_numAutos; m++) {
+            m_chooser.addOption(m_autoNames[m], m);
+        }
+     
+    
     }
 
 
@@ -77,20 +85,20 @@ public class AutoSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Auto Mode", m_chooser.getSelected() );   
+        SmartDashboard.putString("Auto Mode", String.format("(%d) %s", m_chooser.getSelected(), m_autoNames[m_chooser.getSelected()] ));   
     }
 
     public Command getAutonomousCommand() {
         switch (m_chooser.getSelected()) {
             case 1:
-            return getRed1Auto();
+            return getRedWallAuto();
         
             case 2:
             default:
-            return getRed2Auto();
+            return getRedCenterAuto();
         
             case 3:
-            return getRed3Auto();
+            return getRedFeederAuto();
         }
     }
     
@@ -106,20 +114,20 @@ public class AutoSubsystem extends SubsystemBase {
             m_robotDrive);
     }
 
-    public Command getRed1Auto(){
+    public Command getRedWallAuto(){
         // Protect in case we havent seen the target yet
         if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-            Shared.currentPose = new Pose2d(14.5, 1.07, new Rotation2d(0.0));
+            Shared.currentPose = new Pose2d(14.5, 0.97, new Rotation2d(0.0));
         }
 
         // Basic trajectory to follow. All units in meters.
         Trajectory red1ToOutsideRamp = TrajectoryGenerator.generateTrajectory(
             // Start at the origin facing the +X 
-            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(-160) ),
+            new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(-150) ),
             // Pass through these two interior waypoints, making an 's' curve path
-            List.of(    new Translation2d(13.5, 0.97), 
-                        new Translation2d(12.5, 0.97),
-                        new Translation2d(11.5, 0.97),
+            List.of(    new Translation2d(13.5, 0.87), 
+                        new Translation2d(12.5, 0.87),
+                        new Translation2d(11.5, 0.87),
                         new Translation2d(10.5, 1.47)
                         ),
             new Pose2d(10.5, 2.7, new Rotation2d(0)),
@@ -150,7 +158,7 @@ public class AutoSubsystem extends SubsystemBase {
     }
 
 
-    public Command getRed2Auto(){
+    public Command getRedCenterAuto(){
 
         // Protect in case we havent seen the target yet
         if (Math.abs(Shared.currentPose.getX()) <  0.5) {
@@ -179,11 +187,11 @@ public class AutoSubsystem extends SubsystemBase {
         );
     }
 
-    public Command getRed3Auto(){
+    public Command getRedFeederAuto(){
 
         // Protect in case we havent seen the target yet
         if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-            Shared.currentPose = new Pose2d(14.5, 4.4, new Rotation2d(0.0));
+            Shared.currentPose = new Pose2d(14.6, 4.4, new Rotation2d(0.0));
         }
 
         // Basic trajectory to follow. All units in meters.
@@ -191,9 +199,9 @@ public class AutoSubsystem extends SubsystemBase {
             // Start at the origin facing the +X 
             new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(160) ),
             // Pass through these two interior waypoints, making an 's' curve path
-            List.of(    new Translation2d(13.5, 4.5), 
-                        new Translation2d(12.5, 4.5),
-                        new Translation2d(11.5, 4.5),
+            List.of(    new Translation2d(13.5, 4.7), 
+                        new Translation2d(12.5, 4.7),
+                        new Translation2d(11.5, 4.7),
                         new Translation2d(10.5, 3.9)
                         ),
             new Pose2d(10.5, 2.74, new Rotation2d(0)),
