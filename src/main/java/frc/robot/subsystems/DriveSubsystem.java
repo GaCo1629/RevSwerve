@@ -246,7 +246,7 @@ public class DriveSubsystem extends SubsystemBase {
     // Drive based on current goals.
     if (driver.getCircleButton()) {
 
-      move(0.2, 0, rotDelivered, false);  // Drive Forward to collect game piece
+      move(0.4, 0, rotDelivered, false);  // Drive Forward to collect game piece
 
     } else if (driver.getL1Button()  && Shared.targetPoseSet) {
       /*

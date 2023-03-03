@@ -93,11 +93,14 @@ public class AutoSubsystem extends SubsystemBase {
 
     public Command getAutonomousCommand() {
         switch (m_chooser.getSelected()) {
+            case 0:
+            default:
+            return getDoNothing();
+            
             case 1:
             return getWallRampAuto();
         
             case 2:
-            default:
             return getCenterRampAuto();
         
             case 3:
@@ -121,6 +124,20 @@ public class AutoSubsystem extends SubsystemBase {
             m_hController,
             m_robotDrive::setModuleStates,
             m_robotDrive);
+    }
+
+    // ================================================================================================
+    public Command getDoNothing(){
+        // Run path following command, then stop at the end.
+        return Commands.sequence(
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
+            Commands.waitUntil(Shared.inPosition),
+            m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
+            Commands.waitSeconds(1),
+            m_GPM.runCollectorCmd(0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            Commands.repeatingSequence(m_robotDrive.stopCmd())
+        );
     }
 
     // ================================================================================================
