@@ -54,7 +54,7 @@ public class AutoSubsystem extends SubsystemBase {
                                 AutoConstants.kMaxAccelerationMetersPerSecondSquared);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
 
-        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 3, 
+        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 4, 
                                                 AutoConstants.kMaxAccelerationMetersPerSecondSquared / 2);
         m_slowConfig.setKinematics(DriveConstants.kDriveKinematics);
 
@@ -169,7 +169,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start From outside the ramp 
                 new Pose2d(10.6, 2.7, new Rotation2d(0)),
                 List.of(new Translation2d(12.45, 2.7)),
-                new Pose2d(12.5, 2.7, new Rotation2d(0)),
+                new Pose2d(12.7, 2.7, new Rotation2d(0)),
                 m_slowConfig);
         } else {
             // Protect in case we havent seen the target yet
@@ -194,7 +194,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start From outside the ramp 
                 new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
                 List.of(new Translation2d(4.08, 2.7)),
-                new Pose2d(4.03, 2.7, new Rotation2d(Math.PI)),
+                new Pose2d(3.83, 2.7, new Rotation2d(Math.PI)),
                 m_slowConfig);
 
         }
@@ -357,7 +357,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start From outside the ramp 
                 new Pose2d(10.6, 2.7, new Rotation2d(0)),
                 List.of(new Translation2d(12.45, 2.7)),
-                new Pose2d(12.5, 2.7, new Rotation2d(0)),
+                new Pose2d(12.7, 2.7, new Rotation2d(0)),
                 m_slowConfig);
         } else {
 
@@ -383,7 +383,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start From outside the ramp 
                 new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
                 List.of(new Translation2d(4.08, 2.7)),
-                new Pose2d(4.03, 2.7, new Rotation2d(Math.PI)),
+                new Pose2d(3.83, 2.7, new Rotation2d(Math.PI)),
                 m_slowConfig);
         }
             
