@@ -54,8 +54,8 @@ public class AutoSubsystem extends SubsystemBase {
                                 AutoConstants.kMaxAccelerationMetersPerSecondSquared);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
 
-        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 4, 
-                                                AutoConstants.kMaxAccelerationMetersPerSecondSquared / 2);
+        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 2, 
+                                                AutoConstants.kMaxAccelerationMetersPerSecondSquared);
         m_slowConfig.setKinematics(DriveConstants.kDriveKinematics);
 
         m_slowRevConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 3, 
