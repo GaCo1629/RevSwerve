@@ -214,7 +214,7 @@ public final class Constants {
    
     public static final double kConeCollectPower  = -0.5 ;
     public static final double kConeAutoEjectPower = -0.3 ;
-    public static final double kConeHoldPower     = -0.05 ;
+    public static final double kConeHoldPower     = -0.1 ; //was -.05
     public static final double kConeEjectPower    =  0.2 ;
     public static final double kCubeCollectPower  =  0.3 ;
     public static final double kCubeHoldPower     =  0.05 ;
