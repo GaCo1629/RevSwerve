@@ -50,16 +50,16 @@ public class AutoSubsystem extends SubsystemBase {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
         
-        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 2,
-                                AutoConstants.kMaxAccelerationMetersPerSecondSquared);
+        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond * 0.7,
+                                              AutoConstants.kMaxAccelerationMetersPerSecondSquared);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
 
-        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 2, 
-                                                AutoConstants.kMaxAccelerationMetersPerSecondSquared);
+        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond * 0.5, 
+                                              AutoConstants.kMaxAccelerationMetersPerSecondSquared);
         m_slowConfig.setKinematics(DriveConstants.kDriveKinematics);
 
-        m_slowRevConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond / 3, 
-        AutoConstants.kMaxAccelerationMetersPerSecondSquared / 2);
+        m_slowRevConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond * 0.333, 
+                                                 AutoConstants.kMaxAccelerationMetersPerSecondSquared);
         m_slowRevConfig.setKinematics(DriveConstants.kDriveKinematics);
         m_slowRevConfig.setReversed(true);
 
@@ -168,8 +168,8 @@ public class AutoSubsystem extends SubsystemBase {
             wallUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
                 // Start From outside the ramp 
                 new Pose2d(10.6, 2.7, new Rotation2d(0)),
-                List.of(new Translation2d(12.45, 2.7)),
-                new Pose2d(12.7, 2.7, new Rotation2d(0)),
+                List.of(new Translation2d(11.6, 2.7)),
+                new Pose2d(12.15, 2.7, new Rotation2d(0)),
                 m_slowConfig);
         } else {
             // Protect in case we havent seen the target yet
@@ -193,8 +193,8 @@ public class AutoSubsystem extends SubsystemBase {
             wallUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
                 // Start From outside the ramp 
                 new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
-                List.of(new Translation2d(4.08, 2.7)),
-                new Pose2d(3.83, 2.7, new Rotation2d(Math.PI)),
+                List.of(new Translation2d(4.93, 2.7)),
+                new Pose2d(4.4, 2.7, new Rotation2d(Math.PI)),
                 m_slowConfig);
 
         }
@@ -356,8 +356,8 @@ public class AutoSubsystem extends SubsystemBase {
             feederUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
                 // Start From outside the ramp 
                 new Pose2d(10.6, 2.7, new Rotation2d(0)),
-                List.of(new Translation2d(12.45, 2.7)),
-                new Pose2d(12.7, 2.7, new Rotation2d(0)),
+                List.of(new Translation2d(11.6, 2.7)),
+                new Pose2d(12.15, 2.7, new Rotation2d(0)),
                 m_slowConfig);
         } else {
 
@@ -382,8 +382,8 @@ public class AutoSubsystem extends SubsystemBase {
             feederUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
                 // Start From outside the ramp 
                 new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
-                List.of(new Translation2d(4.08, 2.7)),
-                new Pose2d(3.83, 2.7, new Rotation2d(Math.PI)),
+                List.of(new Translation2d(4.95, 2.7)),
+                new Pose2d(4.4, 2.7, new Rotation2d(Math.PI)),
                 m_slowConfig);
         }
             
