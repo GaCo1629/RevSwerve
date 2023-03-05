@@ -309,7 +309,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start at the origin facing the +X 
                 Shared.currentPose, 
                 List.of(new Translation2d(3.03, 2.74)),
-                new Pose2d(4.4, 2.7, new Rotation2d(Math.PI)),
+                new Pose2d(4.3, 2.7, new Rotation2d(Math.PI)),
                 m_slowRevConfig);
         }
     
