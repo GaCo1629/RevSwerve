@@ -40,7 +40,8 @@ public class GPMSubsystem extends SubsystemBase {
     private PS4Controller driver;
     private Joystick copilot_1;
     private Joystick copilot_2;
-    private CANSparkMax m_armMax = new CANSparkMax(GPMConstants.kArmCanId, MotorType.kBrushless);
+    private CANSparkMax m_armRightMax = new CANSparkMax(GPMConstants.kArmRightCanId, MotorType.kBrushless);
+    private CANSparkMax m_armLeftMax = new CANSparkMax(GPMConstants.kArmLeftCanId, MotorType.kBrushless);
     private CANSparkMax m_collectorMax = new CANSparkMax(GPMConstants.kCollectorCanId, MotorType.kBrushless);
     private AbsoluteEncoder m_armEncoder;
     private Spark blinkyLEDs = new Spark(GPMConstants.kLEDpwmID); 
@@ -62,7 +63,7 @@ public class GPMSubsystem extends SubsystemBase {
                                             new Constraints(GPMConstants.kMaxArmVelocity, GPMConstants.kMaxArmAcceleration));
         m_armPID.setIntegratorRange(-GPMConstants.kArmMaxI, GPMConstants.kArmMaxI);
        
-        m_armEncoder = m_armMax.getAbsoluteEncoder(Type.kDutyCycle);  
+        m_armEncoder = m_armRightMax.getAbsoluteEncoder(Type.kDutyCycle);  
         blinkyLEDs.set(DriverStation.getAlliance() == Alliance.Blue ? GPMConstants.kBlueColor : GPMConstants.kRedColor);
         liftGPM();
     }
@@ -285,10 +286,11 @@ public class GPMSubsystem extends SubsystemBase {
         } 
 
         // Send power to arm;
-        m_armMax.set(armOutput); 
+        runArm(armOutput);
         Shared.armInPosition = (Math.abs(Shared.armPosition - m_armSetpoint) < 0.05);
 
-        SmartDashboard.putNumber("Arm Motor", armOutput);
+        SmartDashboard.putNumber("Right Arm Motor", m_armRightMax.get());
+        SmartDashboard.putNumber("Left Arm Motor", m_armLeftMax.get());
         SmartDashboard.putNumber("Arm Angle (deg)", Shared.armPosition);
         SmartDashboard.putNumber("Arm Setpoint (deg)", m_armSetpoint);
         SmartDashboard.putBoolean("Arm In Position", Shared.armInPosition);
@@ -356,7 +358,8 @@ public class GPMSubsystem extends SubsystemBase {
 
 
     public void runArm(double speed) {
-        m_armMax.set(speed);
+        m_armRightMax.set(speed);
+        m_armLeftMax.set(-speed);
     }
     
     public void runCollector(double speed) {

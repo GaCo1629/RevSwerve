@@ -198,7 +198,8 @@ public final class Constants {
   }
 
   public static final class GPMConstants {
-    public static final int kArmCanId = 19; 
+    public static final int kArmRightCanId = 19; 
+    public static final int kArmLeftCanId = 21;
     public static final int kCollectorCanId = 20; 
     public static final int kGPMSolenoidModule = 2;
     public static final int[] kGPMSolenoidPorts = new int[] {15, 0}; // Up, Down
@@ -237,7 +238,7 @@ public final class Constants {
     public static final double kArmBackstop = 0.16;   
     public static final double kArmBackstopTrigger = 0.18;   
     public static final double kArmSafeToSpinn = 0.18;   
-    public static final double kArmBackPower = -0.05;
+    public static final double kArmBackPower = -0.04;
 
     public static final int    kLEDpwmID  = 9 ;
     public static final double kCubeColor = 0.91;
