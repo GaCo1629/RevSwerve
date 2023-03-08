@@ -262,6 +262,8 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber( "X Move", xSpeed);
     SmartDashboard.putNumber( "Y Move", ySpeed);
     SmartDashboard.putNumber( "Rotate", rot);
+    SmartDashboard.putNumber( "Pitch", getPitch());
+    SmartDashboard.putNumber( "Roll",  getRoll());
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
     SmartDashboard.putString("Target", Shared.targetPose.toString());
   }
@@ -320,6 +322,14 @@ public class DriveSubsystem extends SubsystemBase {
 
   public double getHeading() {
       return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FieldOffset, Math.PI * 2);
+  }
+
+  public double getPitch() {
+    return m_gyro.getPitch();
+  }
+
+  public double getRoll() {
+    return m_gyro.getRoll();
   }
 
   
