@@ -96,6 +96,16 @@ public class DriveSubsystem extends SubsystemBase {
     yController = new ProfiledPIDController(AutoConstants.kPYController, 0, 0, AutoConstants.kTranslateControllerConstraints);
       
   }
+
+  
+  // ===   Commands that call driveSystem methods  =======
+  public CommandBase setXCmd() {return this.runOnce(() -> setX());}
+  public CommandBase moveCmd(double x, double y, double t, boolean fieldRel) {return this.runOnce(() -> move(x, y, t, fieldRel));}
+  public CommandBase stopCmd() {return this.runOnce(() -> stop());}
+  public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
+  public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
+  public CommandBase balanceCmd() {return this.runOnce(() -> balance());}
+
  
   public void init() {
     setFieldOffsets();
@@ -129,7 +139,8 @@ public class DriveSubsystem extends SubsystemBase {
     if (Shared.useAprilTags) {
       Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
 
-      if (result.isPresent()) {
+      Shared.canSeeAprilTag = result.isPresent();
+      if (Shared.canSeeAprilTag) {
           EstimatedRobotPose camPose = result.get();
           Pose2d camPose2d = camPose.estimatedPose.toPose2d();
           Pose2d gyroCamPose2d = new Pose2d(camPose2d.getTranslation(), getRotation2d());  // use gyro heading
@@ -174,7 +185,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   /**
-   * Method to drive the robot using joystick info.
+   * Method to drive the robot using joystick info. ================================================
    *
    * @param fieldRelative Whether the provided x and y speeds are relative to the
    */
@@ -183,6 +194,8 @@ public class DriveSubsystem extends SubsystemBase {
     double xSpeedLimited;
     double ySpeedLimited;
     double turnSpeedLimited ;
+
+    currentHeading = getHeading(); 
     
     double xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband) *  DriveConstants.kSpeedFactor;
     double ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband) * DriveConstants.kSpeedFactor;
@@ -204,8 +217,6 @@ public class DriveSubsystem extends SubsystemBase {
       xSpeed = DriveConstants.kMinApproachSpeed;
     }
 
-    currentHeading = getHeading(); 
-
     // look to flip direction
     if (driver.getR1ButtonPressed() && (Shared.armPosition < GPMConstants.kArmSafeToSpinn)) {
       if (Math.abs(currentHeading) < Math.PI/2) {
@@ -220,8 +231,7 @@ public class DriveSubsystem extends SubsystemBase {
     ySpeedLimited = m_yLimiter.calculate(ySpeed);
     turnSpeedLimited = m_rotLimiter.calculate(turnSpeed);
   
-
-      // Check Auto Heading
+    // Check Auto Heading
     if (Math.abs(turnSpeed) > 0.02) {
       headingLocked = false;
     } else if (!headingLocked && isNotRotating()) {
@@ -257,6 +267,18 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putString("Target", Shared.targetPose.toString());
   }
 
+  // === Function to use to end Auto with a Charge Station balance
+  public void balance() {
+    // Assume that the robot is facing towards the peak of the ramp, and is already engaged
+    boolean balanced = false;
+
+    
+    while (!balanced) {
+
+    }
+    stop();
+  }
+
 
   public void initDrivePIDs() {
     newHeadingSetpoint(Shared.targetPose.getRotation().getRadians());
@@ -280,12 +302,10 @@ public class DriveSubsystem extends SubsystemBase {
     currentHeading = getHeading(); 
     newHeadingSetpoint(currentHeading);
   }
-  public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
 
   public void useAprilTags(boolean useTags) {
     Shared.useAprilTags = useTags;
   }
-  public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
 
 
   public boolean isNotRotating() {
@@ -351,12 +371,9 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearRight.setDesiredState(swerveModuleStates[3]);
   }
  
-  public CommandBase moveCmd(double x, double y, double t, boolean fieldRel) {return this.runOnce(() -> move(x, y, t, fieldRel));}
-
   public void stop() {
     move(0,0,0, false);
   }
-  public CommandBase stopCmd() {return this.runOnce(() -> stop());}
 
   /**
    * Sets the wheels into an X formation to prevent movement.
@@ -367,7 +384,6 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
     m_rearRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
   }
-  public CommandBase setXCmd() {return this.runOnce(() -> setX());}
 
   /**
    * Sets the swerve ModuleStates.
@@ -390,7 +406,6 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.resetEncoders();
     m_rearRight.resetEncoders();
   }
-
     
   /**
    * Returns the turn rate of the robot.
