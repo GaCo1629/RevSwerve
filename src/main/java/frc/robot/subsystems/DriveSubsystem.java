@@ -176,35 +176,33 @@ public class DriveSubsystem extends SubsystemBase {
   /**
    * Method to drive the robot using joystick info.
    *
-   * @param xSpeed        Speed of the robot in the x direction (forward).
-   * @param ySpeed        Speed of the robot in the y direction (sideways).
-   * @param rot           Angular rate of the robot.
    * @param fieldRelative Whether the provided x and y speeds are relative to the
-   *                      field.
-   * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void drive(boolean fieldRelative, boolean rateLimit) {
+  public void drive() {
 
-    double xSpeedCommanded;
-    double ySpeedCommanded;
-    double rotationCommanded ;
+    double xSpeedLimited;
+    double ySpeedLimited;
+    double turnSpeedLimited ;
     
-    double xSpeed = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband);
-    double ySpeed = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband);
-    double rot    = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband);
+    double xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband) *  DriveConstants.kSpeedFactor;
+    double ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband) * DriveConstants.kSpeedFactor;
+    double turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband) * DriveConstants.kTurnFactor;
     
     // Drive with pure motions
     int POV = driver.getPOV();
     if (POV >= 0) {
-      rot = 0;
+      turnSpeed = 0;
       switch ((int)(POV / 45)) {
-        case 0: xSpeed =  0.2; ySpeed =  0.0; break;
-        case 2: xSpeed =  0.0; ySpeed = -0.2; break;
-        case 4: xSpeed = -0.2; ySpeed =  0.0; break;
-        case 6: xSpeed =  0.0; ySpeed =  0.2; break;
-        default: xSpeed =  0.0; ySpeed =  0.0; break;
+        case 0:  xSpeed =  DriveConstants.kDPADSpeed; ySpeed =  0.0; break;
+        case 2:  xSpeed =  0.0;                       ySpeed = -DriveConstants.kDPADSpeed; break;
+        case 4:  xSpeed = -DriveConstants.kDPADSpeed; ySpeed =  0.0; break;
+        case 6:  xSpeed =  0.0;                       ySpeed =  DriveConstants.kDPADSpeed; break;
+        default: xSpeed =  0.0;                       ySpeed =  0.0; break;
       }
-    } 
+    } else if (driver.getCircleButton()) {
+      // determine desired approach speed
+      xSpeed = DriveConstants.kMinApproachSpeed;
+    }
 
     currentHeading = getHeading(); 
 
@@ -218,13 +216,13 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     // Rate limit the input commands
-    xSpeedCommanded = m_xLimiter.calculate(xSpeed) ;
-    ySpeedCommanded = m_yLimiter.calculate(ySpeed);
-    rotationCommanded = m_rotLimiter.calculate(rot);
+    xSpeedLimited = m_xLimiter.calculate(xSpeed) ;
+    ySpeedLimited = m_yLimiter.calculate(ySpeed);
+    turnSpeedLimited = m_rotLimiter.calculate(turnSpeed);
   
 
       // Check Auto Heading
-    if (Math.abs(rot) > 0.02) {
+    if (Math.abs(turnSpeed) > 0.02) {
       headingLocked = false;
     } else if (!headingLocked && isNotRotating()) {
       headingLocked = true;
@@ -232,36 +230,27 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     if (headingLocked) {
-      rotationCommanded = headingLockController.calculate(currentHeading, headingSetpoint);
-      if (Math.abs(rotationCommanded) < 0.1) {
-        rotationCommanded = 0;
+      turnSpeedLimited = headingLockController.calculate(currentHeading, headingSetpoint);
+      if (Math.abs(turnSpeedLimited) < 0.1) {
+        turnSpeedLimited = 0;
       } 
     }
   
     // Convert the commanded speeds into the correct units for the drivetrain
-    double xSpeedDelivered = xSpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond * DriveConstants.kSpeedFactor;
-    double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond* DriveConstants.kSpeedFactor;
-    double rotDelivered = rotationCommanded * DriveConstants.kMaxAngularSpeed * DriveConstants.kTurnFactor;
+    double xSpeedMPS    = xSpeedLimited * DriveConstants.kMaxSpeedMetersPerSecond;
+    double ySpeedMPS    = ySpeedLimited * DriveConstants.kMaxSpeedMetersPerSecond;
+    double turnSpeedRPS = turnSpeedLimited * DriveConstants.kMaxAngularSpeed;
 
     // Drive based on current goals.
     if (driver.getCircleButton()) {
-
-      move(0.4, 0, rotDelivered, false);  // Drive Forward to collect game piece
-
-    } else if (driver.getL1Button()  && Shared.targetPoseSet) {
-      /*
-      if (driver.getL1ButtonPressed()) {
-        initDrivePIDs();  //Setup PID's based on target Pose
-      }
-      driveToLocation();        // Drive to target location using PIDs
-      */
+      move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, false); // Drive Forward to collect game piece
     } else {
-      move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);  // Drive based on field centric commands
+      move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, true);  // Drive based on field centric commands
     }
 
     SmartDashboard.putNumber( "X Move", xSpeed);
     SmartDashboard.putNumber( "Y Move", ySpeed);
-    SmartDashboard.putNumber( "Rotate", rot);
+    SmartDashboard.putNumber( "Rotate", turnSpeed);
     SmartDashboard.putNumber( "Pitch", getPitch());
     SmartDashboard.putNumber( "Roll",  getRoll());
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
