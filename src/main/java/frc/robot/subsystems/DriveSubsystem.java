@@ -24,6 +24,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.Trajectory.State;
 import frc.robot.PhotonCameraWrapper;
 import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
@@ -284,6 +286,9 @@ public class DriveSubsystem extends SubsystemBase {
     setX();
   }
 
+  public void setForwardSpeed(TrapezoidProfile.State setPoint) {
+    move(setPoint.velocity, 0, 0, false);
+  }
 
   public void initDrivePIDs() {
     newHeadingSetpoint(Shared.targetPose.getRotation().getRadians());

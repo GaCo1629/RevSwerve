@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -18,7 +19,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.TrapezoidProfileCommand;
 import frc.robot.Shared;
+import frc.robot.Commands.Balance;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.GPMConstants;
@@ -50,16 +53,16 @@ public class AutoSubsystem extends SubsystemBase {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
         
-        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond * 0.7,
-                                              AutoConstants.kMaxAccelerationMetersPerSecondSquared);
+        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.7,
+                                              AutoConstants.kMaxAccelerationMPS2);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
 
-        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond * 0.5, 
-                                              AutoConstants.kMaxAccelerationMetersPerSecondSquared);
+        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.5, 
+                                              AutoConstants.kMaxAccelerationMPS2);
         m_slowConfig.setKinematics(DriveConstants.kDriveKinematics);
 
-        m_slowRevConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMetersPerSecond * 0.333, 
-                                                 AutoConstants.kMaxAccelerationMetersPerSecondSquared);
+        m_slowRevConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.333, 
+                                                 AutoConstants.kMaxAccelerationMPS2);
         m_slowRevConfig.setKinematics(DriveConstants.kDriveKinematics);
         m_slowRevConfig.setReversed(true);
 
@@ -125,6 +128,8 @@ public class AutoSubsystem extends SubsystemBase {
             m_robotDrive::setModuleStates,
             m_robotDrive);
     }
+
+    
 
     // ================================================================================================
     public Command getDoNothing(){
@@ -328,9 +333,9 @@ public class AutoSubsystem extends SubsystemBase {
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
         */
-
+       
         return Commands.sequence(
-            m_robotDrive.balanceCmd(),
+            new Balance(m_robotDrive),
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
     }
