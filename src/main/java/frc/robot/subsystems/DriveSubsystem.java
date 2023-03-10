@@ -156,6 +156,8 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putString("Heading", String.format("%.2f (deg)", Math.toDegrees(getHeading())));
     SmartDashboard.putNumber("Level", Shared.gridLevel);
     SmartDashboard.putNumber("Position", Shared.gridNumber);
+    SmartDashboard.putNumber( "Pitch", getPitch());
+    SmartDashboard.putNumber( "Roll",  getRoll());
   }
 
   /**
@@ -254,6 +256,8 @@ public class DriveSubsystem extends SubsystemBase {
     // Drive based on current goals.
     if (driver.getCircleButton()) {
       move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, false); // Drive Forward to collect game piece
+    } else if(driver.getL1Button() && driver.getL2Button()){
+      setX(); 
     } else {
       move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, true);  // Drive based on field centric commands
     }
@@ -261,8 +265,6 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber( "X Move", xSpeed);
     SmartDashboard.putNumber( "Y Move", ySpeed);
     SmartDashboard.putNumber( "Rotate", turnSpeed);
-    SmartDashboard.putNumber( "Pitch", getPitch());
-    SmartDashboard.putNumber( "Roll",  getRoll());
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
     SmartDashboard.putString("Target", Shared.targetPose.toString());
   }
@@ -271,12 +273,15 @@ public class DriveSubsystem extends SubsystemBase {
   public void balance() {
     // Assume that the robot is facing towards the peak of the ramp, and is already engaged
     boolean balanced = false;
-
+    double startingAngle = getPitch();
     
+    move(-0.075 * DriveConstants.kMaxSpeedMetersPerSecond, 0, 0, false);
     while (!balanced) {
-
+      if (Math.abs(startingAngle - getPitch()) >= 1.5){
+        balanced = true;
+      }
     }
-    stop();
+    setX();
   }
 
 
@@ -334,11 +339,11 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public double getPitch() {
-    return m_gyro.getPitch();
+    return -m_gyro.getRoll();
   }
 
   public double getRoll() {
-    return m_gyro.getRoll();
+    return -m_gyro.getPitch();
   }
 
   

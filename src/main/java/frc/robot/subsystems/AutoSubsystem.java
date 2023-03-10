@@ -283,6 +283,7 @@ public class AutoSubsystem extends SubsystemBase {
 
         Trajectory centerToUpRamp;
 
+        /*
         if (DriverStation.getAlliance() == Alliance.Red) {
 
             // Protect in case we havent seen the target yet
@@ -312,6 +313,7 @@ public class AutoSubsystem extends SubsystemBase {
                 new Pose2d(4.3, 2.7, new Rotation2d(Math.PI)),
                 m_slowRevConfig);
         }
+
     
         // Run path following command, then stop at the end.
         return Commands.sequence(
@@ -323,6 +325,12 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             //Commands.waitUntil(Shared.inPosition), 
             runTrajectory(centerToUpRamp),           
+            Commands.repeatingSequence(m_robotDrive.setXCmd())
+        );
+        */
+
+        return Commands.sequence(
+            m_robotDrive.balanceCmd(),
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
     }
@@ -462,5 +470,7 @@ public class AutoSubsystem extends SubsystemBase {
             Commands.repeatingSequence(m_robotDrive.stopCmd())
         );
     }
+ 
+//===================================================================================================
 
 }
