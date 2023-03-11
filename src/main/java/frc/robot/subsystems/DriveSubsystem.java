@@ -25,7 +25,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.Trajectory.State;
 import frc.robot.PhotonCameraWrapper;
 import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
@@ -106,7 +105,7 @@ public class DriveSubsystem extends SubsystemBase {
   public CommandBase stopCmd() {return this.runOnce(() -> stop());}
   public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
   public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
-  public CommandBase balanceCmd() {return this.runOnce(() -> balance());}
+
 
  
   public void init() {
@@ -269,21 +268,6 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber( "Rotate", turnSpeed);
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
     SmartDashboard.putString("Target", Shared.targetPose.toString());
-  }
-
-  // === Function to use to end Auto with a Charge Station balance
-  public void balance() {
-    // Assume that the robot is facing towards the peak of the ramp, and is already engaged
-    boolean balanced = false;
-    double startingAngle = getPitch();
-    
-    move(-0.075 * DriveConstants.kMaxSpeedMetersPerSecond, 0, 0, false);
-    while (!balanced) {
-      if (Math.abs(startingAngle - getPitch()) >= 1.5){
-        balanced = true;
-      }
-    }
-    setX();
   }
 
   public void setForwardSpeed(TrapezoidProfile.State setPoint) {
