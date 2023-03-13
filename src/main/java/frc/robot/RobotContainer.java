@@ -41,7 +41,7 @@ public class RobotContainer {
     configureButtonBindings();
 
     // Configure default commands
-    m_robotDrive.setDefaultCommand(new RunCommand(() -> m_robotDrive.drive(true, true),m_robotDrive));
+    m_robotDrive.setDefaultCommand(new RunCommand(() -> m_robotDrive.drive(),m_robotDrive));
     m_GPM.setDefaultCommand(new RunCommand(() -> m_GPM.teleopRun(),m_GPM));
 
     

@@ -49,6 +49,8 @@ public final class Constants {
 
     public static final double kSpeedFactor = 0.75;
     public static final double kTurnFactor  = 0.70; 
+    public static final double kDPADSpeed   = 0.20; 
+    public static final double kMinApproachSpeed = 0.15;
 
     public static final double kMagnitudeSlewRate = 2; // percent per second (1 = 100%)
     public static final double kRotationalSlewRate = 2; // percent per second (1 = 100%)
@@ -165,26 +167,28 @@ public final class Constants {
   }
 
   public static final class AutoConstants {
-    public static final double kMaxSpeedMetersPerSecond = 3;
-    public static final double kMaxAccelerationMetersPerSecondSquared = 3;
-    public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
-    public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
+    public static final double kMaxSpeedMPS = 3;
+    public static final double kMaxAccelerationMPS2 = 3;
+    public static final double kMaxAngularSpeedRPS = Math.PI;
+    public static final double kMaxAngularSpeedRPS2 = Math.PI;
 
     public static final double kPXController = 2;
     public static final double kPYController = 2;
     public static final double kPThetaController = 1;
 
-    public static final double kAutoMaxAngularSpeedRadiansPerSecond = 8.0;
-    public static final double kAutoMaxAngularAccelerationRadiansPerSecondSquared = 8.0 ;
-    
+    public static final double kAutoMaxAngularSpeedRPS = 8.0;
+    public static final double kAutoMaxAngularAccelerationRPS2 = 8.0 ;
+
+    public static final double kBalanceApproachSpeedMPS = 0.5 ;
+   
     // Constraint for the motion profiled robot angle controller
     public static final TrapezoidProfile.Constraints kTranslateControllerConstraints = new TrapezoidProfile.Constraints(3, 1);
 
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
-      kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+      kMaxAngularSpeedRPS, kMaxAngularSpeedRPS2);
   
     public static final TrapezoidProfile.Constraints kHeadingLockConstraints = new TrapezoidProfile.Constraints(
-      kAutoMaxAngularSpeedRadiansPerSecond, kAutoMaxAngularAccelerationRadiansPerSecondSquared);
+      kAutoMaxAngularSpeedRPS, kAutoMaxAngularAccelerationRPS2);
   
     public static final double kPHeadingLockController = 2;
     public static final double kIHeadingLockController = 0;

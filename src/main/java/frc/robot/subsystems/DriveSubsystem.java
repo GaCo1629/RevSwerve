@@ -24,6 +24,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.PhotonCameraWrapper;
 import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
@@ -96,6 +97,16 @@ public class DriveSubsystem extends SubsystemBase {
     yController = new ProfiledPIDController(AutoConstants.kPYController, 0, 0, AutoConstants.kTranslateControllerConstraints);
       
   }
+
+  
+  // ===   Commands that call driveSystem methods  =======
+  public CommandBase setXCmd() {return this.runOnce(() -> setX());}
+  public CommandBase moveCmd(double x, double y, double t, boolean fieldRel) {return this.runOnce(() -> move(x, y, t, fieldRel));}
+  public CommandBase stopCmd() {return this.runOnce(() -> stop());}
+  public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
+  public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
+
+
  
   public void init() {
     setFieldOffsets();
@@ -129,7 +140,8 @@ public class DriveSubsystem extends SubsystemBase {
     if (Shared.useAprilTags) {
       Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
 
-      if (result.isPresent()) {
+      Shared.canSeeAprilTag = result.isPresent();
+      if (Shared.canSeeAprilTag) {
           EstimatedRobotPose camPose = result.get();
           Pose2d camPose2d = camPose.estimatedPose.toPose2d();
           Pose2d gyroCamPose2d = new Pose2d(camPose2d.getTranslation(), getRotation2d());  // use gyro heading
@@ -145,6 +157,8 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putString("Heading", String.format("%.2f (deg)", Math.toDegrees(getHeading())));
     SmartDashboard.putNumber("Level", Shared.gridLevel);
     SmartDashboard.putNumber("Position", Shared.gridNumber);
+    SmartDashboard.putNumber( "Pitch", getPitch());
+    SmartDashboard.putNumber( "Roll",  getRoll());
   }
 
   /**
@@ -174,39 +188,37 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   /**
-   * Method to drive the robot using joystick info.
+   * Method to drive the robot using joystick info. ================================================
    *
-   * @param xSpeed        Speed of the robot in the x direction (forward).
-   * @param ySpeed        Speed of the robot in the y direction (sideways).
-   * @param rot           Angular rate of the robot.
    * @param fieldRelative Whether the provided x and y speeds are relative to the
-   *                      field.
-   * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void drive(boolean fieldRelative, boolean rateLimit) {
+  public void drive() {
 
-    double xSpeedCommanded;
-    double ySpeedCommanded;
-    double rotationCommanded ;
+    double xSpeedLimited;
+    double ySpeedLimited;
+    double turnSpeedLimited ;
+
+    currentHeading = getHeading(); 
     
-    double xSpeed = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband);
-    double ySpeed = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband);
-    double rot    = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband);
+    double xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband) *  DriveConstants.kSpeedFactor;
+    double ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband) * DriveConstants.kSpeedFactor;
+    double turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband) * DriveConstants.kTurnFactor;
     
     // Drive with pure motions
     int POV = driver.getPOV();
     if (POV >= 0) {
-      rot = 0;
+      turnSpeed = 0;
       switch ((int)(POV / 45)) {
-        case 0: xSpeed =  0.2; ySpeed =  0.0; break;
-        case 2: xSpeed =  0.0; ySpeed = -0.2; break;
-        case 4: xSpeed = -0.2; ySpeed =  0.0; break;
-        case 6: xSpeed =  0.0; ySpeed =  0.2; break;
-        default: xSpeed =  0.0; ySpeed =  0.0; break;
+        case 0:  xSpeed =  DriveConstants.kDPADSpeed; ySpeed =  0.0; break;
+        case 2:  xSpeed =  0.0;                       ySpeed = -DriveConstants.kDPADSpeed; break;
+        case 4:  xSpeed = -DriveConstants.kDPADSpeed; ySpeed =  0.0; break;
+        case 6:  xSpeed =  0.0;                       ySpeed =  DriveConstants.kDPADSpeed; break;
+        default: xSpeed =  0.0;                       ySpeed =  0.0; break;
       }
-    } 
-
-    currentHeading = getHeading(); 
+    } else if (driver.getCircleButton()) {
+      // determine desired approach speed
+      xSpeed = DriveConstants.kMinApproachSpeed;
+    }
 
     // look to flip direction
     if (driver.getR1ButtonPressed() && (Shared.armPosition < GPMConstants.kArmSafeToSpinn)) {
@@ -218,13 +230,12 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     // Rate limit the input commands
-    xSpeedCommanded = m_xLimiter.calculate(xSpeed) ;
-    ySpeedCommanded = m_yLimiter.calculate(ySpeed);
-    rotationCommanded = m_rotLimiter.calculate(rot);
+    xSpeedLimited = m_xLimiter.calculate(xSpeed) ;
+    ySpeedLimited = m_yLimiter.calculate(ySpeed);
+    turnSpeedLimited = m_rotLimiter.calculate(turnSpeed);
   
-
-      // Check Auto Heading
-    if (Math.abs(rot) > 0.02) {
+    // Check Auto Heading
+    if (Math.abs(turnSpeed) > 0.02) {
       headingLocked = false;
     } else if (!headingLocked && isNotRotating()) {
       headingLocked = true;
@@ -232,40 +243,36 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     if (headingLocked) {
-      rotationCommanded = headingLockController.calculate(currentHeading, headingSetpoint);
-      if (Math.abs(rotationCommanded) < 0.1) {
-        rotationCommanded = 0;
+      turnSpeedLimited = headingLockController.calculate(currentHeading, headingSetpoint);
+      if (Math.abs(turnSpeedLimited) < 0.1) {
+        turnSpeedLimited = 0;
       } 
     }
   
     // Convert the commanded speeds into the correct units for the drivetrain
-    double xSpeedDelivered = xSpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond * DriveConstants.kSpeedFactor;
-    double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond* DriveConstants.kSpeedFactor;
-    double rotDelivered = rotationCommanded * DriveConstants.kMaxAngularSpeed * DriveConstants.kTurnFactor;
+    double xSpeedMPS    = xSpeedLimited * DriveConstants.kMaxSpeedMetersPerSecond;
+    double ySpeedMPS    = ySpeedLimited * DriveConstants.kMaxSpeedMetersPerSecond;
+    double turnSpeedRPS = turnSpeedLimited * DriveConstants.kMaxAngularSpeed;
 
     // Drive based on current goals.
     if (driver.getCircleButton()) {
-
-      move(0.4, 0, rotDelivered, false);  // Drive Forward to collect game piece
-
-    } else if (driver.getL1Button()  && Shared.targetPoseSet) {
-      /*
-      if (driver.getL1ButtonPressed()) {
-        initDrivePIDs();  //Setup PID's based on target Pose
-      }
-      driveToLocation();        // Drive to target location using PIDs
-      */
+      move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, false); // Drive Forward to collect game piece
+    } else if(driver.getL1Button() && driver.getL2Button()){
+      setX(); 
     } else {
-      move(xSpeedDelivered, ySpeedDelivered, rotDelivered, fieldRelative);  // Drive based on field centric commands
+      move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, true);  // Drive based on field centric commands
     }
 
     SmartDashboard.putNumber( "X Move", xSpeed);
     SmartDashboard.putNumber( "Y Move", ySpeed);
-    SmartDashboard.putNumber( "Rotate", rot);
+    SmartDashboard.putNumber( "Rotate", turnSpeed);
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
     SmartDashboard.putString("Target", Shared.targetPose.toString());
   }
 
+  public void setForwardSpeed(TrapezoidProfile.State setPoint) {
+    move(setPoint.velocity, 0, 0, false);
+  }
 
   public void initDrivePIDs() {
     newHeadingSetpoint(Shared.targetPose.getRotation().getRadians());
@@ -289,12 +296,10 @@ public class DriveSubsystem extends SubsystemBase {
     currentHeading = getHeading(); 
     newHeadingSetpoint(currentHeading);
   }
-  public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
 
   public void useAprilTags(boolean useTags) {
     Shared.useAprilTags = useTags;
   }
-  public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
 
 
   public boolean isNotRotating() {
@@ -320,6 +325,14 @@ public class DriveSubsystem extends SubsystemBase {
 
   public double getHeading() {
       return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FieldOffset, Math.PI * 2);
+  }
+
+  public double getPitch() {
+    return -m_gyro.getRoll();
+  }
+
+  public double getRoll() {
+    return -m_gyro.getPitch();
   }
 
   
@@ -352,12 +365,9 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearRight.setDesiredState(swerveModuleStates[3]);
   }
  
-  public CommandBase moveCmd(double x, double y, double t, boolean fieldRel) {return this.runOnce(() -> move(x, y, t, fieldRel));}
-
   public void stop() {
     move(0,0,0, false);
   }
-  public CommandBase stopCmd() {return this.runOnce(() -> stop());}
 
   /**
    * Sets the wheels into an X formation to prevent movement.
@@ -368,7 +378,6 @@ public class DriveSubsystem extends SubsystemBase {
     m_rearLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
     m_rearRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
   }
-  public CommandBase setXCmd() {return this.runOnce(() -> setX());}
 
   /**
    * Sets the swerve ModuleStates.
@@ -391,7 +400,6 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.resetEncoders();
     m_rearRight.resetEncoders();
   }
-
     
   /**
    * Returns the turn rate of the robot.
