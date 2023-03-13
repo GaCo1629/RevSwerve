@@ -174,7 +174,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start From outside the ramp 
                 new Pose2d(10.6, 2.7, new Rotation2d(0)),
                 List.of(new Translation2d(11.6, 2.7)),
-                new Pose2d(12.15, 2.7, new Rotation2d(0)),
+                new Pose2d(12.00, 2.7, new Rotation2d(0)),  // was 12.15
                 m_slowConfig);
         } else {
             // Protect in case we havent seen the target yet
@@ -199,7 +199,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start From outside the ramp 
                 new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
                 List.of(new Translation2d(4.93, 2.7)),
-                new Pose2d(4.4, 2.7, new Rotation2d(Math.PI)),
+                new Pose2d(4.55, 2.7, new Rotation2d(Math.PI)),  // was 4.4
                 m_slowConfig);
 
         }
@@ -216,6 +216,7 @@ public class AutoSubsystem extends SubsystemBase {
             Commands.waitUntil(Shared.inPosition), 
             // m_robotDrive.useAprilTagsCmd(false),
             runTrajectory(wallUpRampFromOutsideRamp),
+            new Balance(m_robotDrive),   // balance the robot  
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
     }
@@ -288,7 +289,7 @@ public class AutoSubsystem extends SubsystemBase {
 
         Trajectory centerToUpRamp;
 
-        /*
+        
         if (DriverStation.getAlliance() == Alliance.Red) {
 
             // Protect in case we havent seen the target yet
@@ -301,7 +302,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start at the origin facing the +X 
                 Shared.currentPose, 
                 List.of(new Translation2d(13.5, 2.74)),
-                new Pose2d(12.15, 2.7, new Rotation2d(0)),
+                new Pose2d(12.45, 2.7, new Rotation2d(0)),
                 m_slowRevConfig);
         } else {
 
@@ -315,7 +316,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start at the origin facing the +X 
                 Shared.currentPose, 
                 List.of(new Translation2d(3.03, 2.74)),
-                new Pose2d(4.3, 2.7, new Rotation2d(Math.PI)),
+                new Pose2d(4.00, 2.7, new Rotation2d(Math.PI)),
                 m_slowRevConfig);
         }
 
@@ -329,15 +330,11 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             //Commands.waitUntil(Shared.inPosition), 
-            runTrajectory(centerToUpRamp),           
+            runTrajectory(centerToUpRamp),     
+            new Balance(m_robotDrive),   // balance the robot   
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
-        */
-       
-        return Commands.sequence(
-            new Balance(m_robotDrive),
-            Commands.repeatingSequence(m_robotDrive.setXCmd())
-        );
+            
     }
 
     // ================================================================================================
@@ -363,14 +360,14 @@ public class AutoSubsystem extends SubsystemBase {
                             new Translation2d(11.5, 4.7),
                             new Translation2d(10.5, 3.9)
                             ),
-                new Pose2d(10.5, 2.74, new Rotation2d(0)),
+                new Pose2d(10.5, 2.74, new Rotation2d(0)), 
                 m_fastConfig);
 
             feederUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
                 // Start From outside the ramp 
                 new Pose2d(10.6, 2.7, new Rotation2d(0)),
                 List.of(new Translation2d(11.6, 2.7)),
-                new Pose2d(12.15, 2.7, new Rotation2d(0)),
+                new Pose2d(12.00, 2.7, new Rotation2d(0)),  // was 12.15
                 m_slowConfig);
         } else {
 
@@ -396,7 +393,7 @@ public class AutoSubsystem extends SubsystemBase {
                 // Start From outside the ramp 
                 new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
                 List.of(new Translation2d(4.95, 2.7)),
-                new Pose2d(4.4, 2.7, new Rotation2d(Math.PI)),
+                new Pose2d(4.55, 2.7, new Rotation2d(Math.PI)),  // was 4.4
                 m_slowConfig);
         }
             
@@ -412,6 +409,7 @@ public class AutoSubsystem extends SubsystemBase {
             // m_robotDrive.useAprilTagsCmd(false),
             Commands.waitUntil(Shared.inPosition), 
             runTrajectory(feederUpRampFromOutsideRamp),
+            new Balance(m_robotDrive),   // balance the robot  
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
 
