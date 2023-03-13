@@ -12,8 +12,8 @@ public class Balance  extends CommandBase {
 
     private DriveSubsystem  m_driveSystem;
     private final   Timer   m_timer          = new Timer();
-    private final   double  m_backupDistance = -0.15;  // use negative sign to be opposite of approach direction
-    private final   double  m_pitchTrip      =  2.0;  // number of degrees variation before stopping
+    private final   double  m_backupDistance = -0.10;  // use negative sign to be opposite of approach direction
+    private final   double  m_pitchTrip      =  3.0;  // number of degrees variation before stopping
 
     private TrapezoidProfile m_profile;
     private double  initialPitch;                     // the robot pitch when we start levelling.
@@ -61,26 +61,36 @@ public class Balance  extends CommandBase {
         case STOPPING:
           m_driveSystem.move(m_profile.calculate(m_timer.get()).velocity, 0, 0, false);
           if (m_timer.hasElapsed(m_profile.totalTime())) {
+            m_driveSystem.setX();
             nextState(BalanceStates.WAITING);  
           }
           break;
 
         case WAITING:
-          if (m_timer.hasElapsed(2)) {
+          if (m_timer.hasElapsed(2.5)) {
             if (Math.abs(m_driveSystem.getPitch()) < 4 ) {
               m_driveSystem.setX();
               nextState(BalanceStates.HOLDING);
             } else {
               approachSign = Math.signum(m_driveSystem.getPitch());  
-              m_profile = driveForward(0.05 * approachSign) ;  // move 2" closer to middle.
-              nextState(BalanceStates.CORRECTING);
+              m_profile = driveForward(0.075 * approachSign) ;  // move 2" closer to middle.
+              // nextState(BalanceStates.JUMP_CORRECTING);
+              nextState(BalanceStates.SLOW_CORRECTING);
             }
           }
           break;
 
-        case CORRECTING:
+          case JUMP_CORRECTING:
           m_driveSystem.move(m_profile.calculate(m_timer.get()).velocity, 0, 0, false);
           if (m_timer.hasElapsed(m_profile.totalTime())) {
+            m_driveSystem.setX();
+            nextState(BalanceStates.HOLDING);  
+          }
+          break;
+
+          case SLOW_CORRECTING:
+          m_driveSystem.move(AutoConstants.kBalanceApproachSpeedMPS * approachSign / 2, 0, 0, false);
+          if (Math.abs(m_driveSystem.getPitch()) < 10 ) {
             m_driveSystem.setX();
             nextState(BalanceStates.HOLDING);  
           }

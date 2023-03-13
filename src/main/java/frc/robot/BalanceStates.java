@@ -4,6 +4,7 @@ public enum BalanceStates {
     APPROACHING,
     STOPPING,
     WAITING,
-    CORRECTING,
+    JUMP_CORRECTING,
+    SLOW_CORRECTING,
     HOLDING
 }

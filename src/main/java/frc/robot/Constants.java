@@ -179,7 +179,7 @@ public final class Constants {
     public static final double kAutoMaxAngularSpeedRPS = 8.0;
     public static final double kAutoMaxAngularAccelerationRPS2 = 8.0 ;
 
-    public static final double kBalanceApproachSpeedMPS = 0.5 ;
+    public static final double kBalanceApproachSpeedMPS = 0.4 ;
    
     // Constraint for the motion profiled robot angle controller
     public static final TrapezoidProfile.Constraints kTranslateControllerConstraints = new TrapezoidProfile.Constraints(3, 1);
