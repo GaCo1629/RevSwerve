@@ -38,11 +38,10 @@ public class Balance  extends CommandBase {
   
     @Override
     public void initialize() {
-      state = BalanceStates.APPROACHING;
-      m_timer.restart();
       initialPitch = m_driveSystem.getPitch();
       approachSign = Math.signum(initialPitch);
       m_driveSystem.move(AutoConstants.kBalanceApproachSpeedMPS * approachSign, 0, 0, false);
+      nextState(BalanceStates.APPROACHING);
     }
   
     @Override
@@ -72,22 +71,23 @@ public class Balance  extends CommandBase {
               m_driveSystem.setX();
               nextState(BalanceStates.HOLDING);
             } else {
-              approachSign = Math.signum(m_driveSystem.getPitch());
-              m_profile = driveForward(0.5 * approachSign) ;  
+              approachSign = Math.signum(m_driveSystem.getPitch());  
+              m_profile = driveForward(0.05 * approachSign) ;  // move 2" closer to middle.
               nextState(BalanceStates.CORRECTING);
             }
           }
           break;
 
         case CORRECTING:
-        m_driveSystem.move(m_profile.calculate(m_timer.get()).velocity, 0, 0, false);
-        if (m_timer.hasElapsed(m_profile.totalTime())) {
-          m_driveSystem.setX();
-          nextState(BalanceStates.HOLDING);  
-        }
-        break;
+          m_driveSystem.move(m_profile.calculate(m_timer.get()).velocity, 0, 0, false);
+          if (m_timer.hasElapsed(m_profile.totalTime())) {
+            m_driveSystem.setX();
+            nextState(BalanceStates.HOLDING);  
+          }
+          break;
 
         case HOLDING:
+          m_driveSystem.setX();
           break;
        
       }
