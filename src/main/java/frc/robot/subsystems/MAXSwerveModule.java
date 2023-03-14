@@ -84,6 +84,7 @@ public class MAXSwerveModule {
     m_drivingPIDController.setI(ModuleConstants.kDrivingI);
     m_drivingPIDController.setD(ModuleConstants.kDrivingD);
     m_drivingPIDController.setFF(ModuleConstants.kDrivingFF);
+    m_drivingPIDController.setIZone(ModuleConstants.kIZone);
     m_drivingPIDController.setOutputRange(ModuleConstants.kDrivingMinOutput,
         ModuleConstants.kDrivingMaxOutput);
 
@@ -156,10 +157,6 @@ public class MAXSwerveModule {
     SwerveModuleState optimizedDesiredState = SwerveModuleState.optimize(correctedDesiredState,
         new Rotation2d(m_turningEncoder.getPosition()));
 
-    // Command driving and turning SPARKS MAX towards their respective setpoints.
-    //m_drivingPIDController.setReference(correctedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
-    //m_turningPIDController.setReference(correctedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
-    
     m_drivingPIDController.setReference(optimizedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
     m_turningPIDController.setReference(optimizedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
     
