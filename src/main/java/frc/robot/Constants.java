@@ -192,7 +192,7 @@ public final class Constants {
     public static final TrapezoidProfile.Constraints kHeadingLockConstraints = new TrapezoidProfile.Constraints(
       kAutoMaxAngularSpeedRPS, kAutoMaxAngularAccelerationRPS2);
   
-    public static final double kPHeadingLockController = 2;
+    public static final double kPHeadingLockController = 1.5;
     public static final double kIHeadingLockController = 0;
     public static final double kDHeadingLockController = 0; 
 
