@@ -157,7 +157,11 @@ public class MAXSwerveModule {
     SwerveModuleState optimizedDesiredState = SwerveModuleState.optimize(correctedDesiredState,
         new Rotation2d(m_turningEncoder.getPosition()));
 
+    if (optimizedDesiredState.speedMetersPerSecond == 0) {
+      m_drivingPIDController.setIAccum(0);
+    }
     m_drivingPIDController.setReference(optimizedDesiredState.speedMetersPerSecond, CANSparkMax.ControlType.kVelocity);
+    
     m_turningPIDController.setReference(optimizedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
     
     

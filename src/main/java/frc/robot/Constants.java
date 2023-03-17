@@ -50,10 +50,10 @@ public final class Constants {
     public static final double kSpeedFactor = 0.75;
     public static final double kTurnFactor  = 0.70; 
     public static final double kDPADSpeed   = 0.20; 
-    public static final double kMinApproachSpeed = 0.15;
+    public static final double kMinApproachSpeed = 0.075;
 
-    public static final double kMagnitudeSlewRate = 2; // percent per second (1 = 100%)
-    public static final double kRotationalSlewRate = 2; // percent per second (1 = 100%)
+    public static final double kMagnitudeSlewRate = 1.8; // percent per second (1 = 100%)
+    public static final double kRotationalSlewRate = 1.8; // percent per second (1 = 100%)
 
     // Chassis configuration
     public static final double kTrackWidth = Units.inchesToMeters(26.5);

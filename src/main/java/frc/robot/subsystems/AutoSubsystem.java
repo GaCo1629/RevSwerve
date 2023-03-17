@@ -406,10 +406,10 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             runTrajectory(feederToOutsideRamp),           
-            // m_robotDrive.useAprilTagsCmd(false),
             Commands.waitUntil(Shared.inPosition), 
+            Commands.waitSeconds(1),
             runTrajectory(feederUpRampFromOutsideRamp),
-            new Balance(m_robotDrive),   // balance the robot  
+            //new Balance(m_robotDrive),   // balance the robot  
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
 

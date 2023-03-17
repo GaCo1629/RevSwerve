@@ -154,7 +154,8 @@ public class DriveSubsystem extends SubsystemBase {
     Shared.currentPose = getPose();
 
     SmartDashboard.putString("Est Pose", getPose().toString());
-    SmartDashboard.putString("Heading", String.format("%.2f (deg)", Math.toDegrees(getHeading())));
+    SmartDashboard.putNumber("Field Y", getPose().getY());
+    SmartDashboard.putNumber("Heading Deg", Math.toDegrees(getHeading()));
     SmartDashboard.putNumber("Level", Shared.gridLevel);
     SmartDashboard.putNumber("Position", Shared.gridNumber);
     SmartDashboard.putNumber( "Pitch", getPitch());
@@ -244,7 +245,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     if (headingLocked) {
       turnSpeedLimited = headingLockController.calculate(currentHeading, headingSetpoint);
-      if (Math.abs(turnSpeedLimited) < 0.1) {
+      if (Math.abs(turnSpeedLimited) < 0.025) {
         turnSpeedLimited = 0;
       } 
     }
