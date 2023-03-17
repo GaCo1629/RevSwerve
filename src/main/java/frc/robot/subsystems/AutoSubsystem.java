@@ -57,15 +57,6 @@ public class AutoSubsystem extends SubsystemBase {
                                               AutoConstants.kMaxAccelerationMPS2);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
 
-        m_slowConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.4,  //was .5
-                                              AutoConstants.kMaxAccelerationMPS2);
-        m_slowConfig.setKinematics(DriveConstants.kDriveKinematics);
-
-        m_slowRevConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.333, 
-                                                 AutoConstants.kMaxAccelerationMPS2);
-        m_slowRevConfig.setKinematics(DriveConstants.kDriveKinematics);
-        m_slowRevConfig.setReversed(true);
-
         m_xController = new PIDController(AutoConstants.kPXController, 0, 0);
         m_yController = new PIDController(AutoConstants.kPYController, 0, 0);
 
@@ -133,7 +124,7 @@ public class AutoSubsystem extends SubsystemBase {
 
     // ================================================================================================
     public Command getDoNothing(){
-        // Run path following command, then stop at the end.
+        // Just score
         return Commands.sequence(
             m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
             Commands.waitUntil(Shared.inPosition),
@@ -149,7 +140,6 @@ public class AutoSubsystem extends SubsystemBase {
     public Command getWallRampAuto(){
 
         Trajectory wallToOutsideRamp;
-        Trajectory wallUpRampFromOutsideRamp;
 
         if (DriverStation.getAlliance() == Alliance.Red) {
             // Protect in case we havent seen the target yet
@@ -169,13 +159,6 @@ public class AutoSubsystem extends SubsystemBase {
                             ),
                 new Pose2d(10.5, 2.7, new Rotation2d(0)),
                 m_fastConfig);
-
-            wallUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
-                // Start From outside the ramp 
-                new Pose2d(10.6, 2.7, new Rotation2d(0)),
-                List.of(new Translation2d(11.6, 2.7)),
-                new Pose2d(12.00, 2.7, new Rotation2d(0)),  // was 12.15
-                m_slowConfig);
         } else {
             // Protect in case we havent seen the target yet
             if (Math.abs(Shared.currentPose.getX()) <  0.5) {
@@ -194,14 +177,6 @@ public class AutoSubsystem extends SubsystemBase {
                             ),
                 new Pose2d(6.03, 2.7, new Rotation2d(Math.PI)),
                 m_fastConfig);
-
-            wallUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
-                // Start From outside the ramp 
-                new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
-                List.of(new Translation2d(4.93, 2.7)),
-                new Pose2d(4.55, 2.7, new Rotation2d(Math.PI)),  // was 4.4
-                m_slowConfig);
-
         }
 
             // Run path following command, then stop at the end.
@@ -214,9 +189,8 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             runTrajectory(wallToOutsideRamp),  
             Commands.waitUntil(Shared.inPosition), 
-            // m_robotDrive.useAprilTagsCmd(false),
-            runTrajectory(wallUpRampFromOutsideRamp),
-            new Balance(m_robotDrive),   // balance the robot  
+            Commands.waitSeconds(0.5),
+            new Balance(m_robotDrive, true),   // balance the robot driving forward 
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
     }
@@ -286,39 +260,19 @@ public class AutoSubsystem extends SubsystemBase {
 
     // ================================================================================================
     public Command getCenterRampAuto(){
-
-        Trajectory centerToUpRamp;
-
         
         if (DriverStation.getAlliance() == Alliance.Red) {
-
             // Protect in case we havent seen the target yet
             if (Math.abs(Shared.currentPose.getX()) <  0.5) {
                 Shared.currentPose = new Pose2d(14.5, 2.74, new Rotation2d(0));
             }
 
-            // Basic trajectory to follow on RED side. All units in meters.
-            centerToUpRamp = TrajectoryGenerator.generateTrajectory(
-                // Start at the origin facing the +X 
-                Shared.currentPose, 
-                List.of(new Translation2d(13.5, 2.74)),
-                new Pose2d(12.45, 2.7, new Rotation2d(0)),
-                m_slowRevConfig);
         } else {
-
             // Protect in case we havent seen the target yet
             if (Math.abs(Shared.currentPose.getX()) <  0.5) {
                 Shared.currentPose = new Pose2d(2.03, 2.74, new Rotation2d(Math.PI));
             }
- 
-            // Basic trajectory to follow on BLUE side. All units in meters.
-            centerToUpRamp = TrajectoryGenerator.generateTrajectory(
-                // Start at the origin facing the +X 
-                Shared.currentPose, 
-                List.of(new Translation2d(3.03, 2.74)),
-                new Pose2d(4.00, 2.7, new Rotation2d(Math.PI)),
-                m_slowRevConfig);
-        }
+         }
 
     
         // Run path following command, then stop at the end.
@@ -329,9 +283,8 @@ public class AutoSubsystem extends SubsystemBase {
             Commands.waitSeconds(1),
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-            //Commands.waitUntil(Shared.inPosition), 
-            runTrajectory(centerToUpRamp),     
-            new Balance(m_robotDrive),   // balance the robot   
+            Commands.waitUntil(Shared.inPosition), 
+            new Balance(m_robotDrive, false),   // balance the robot in rev
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
             
@@ -341,7 +294,6 @@ public class AutoSubsystem extends SubsystemBase {
     public Command getFeederRampAuto(){
 
         Trajectory feederToOutsideRamp;
-        Trajectory feederUpRampFromOutsideRamp;
 
         if (DriverStation.getAlliance() == Alliance.Red) {
 
@@ -362,13 +314,7 @@ public class AutoSubsystem extends SubsystemBase {
                             ),
                 new Pose2d(10.5, 2.74, new Rotation2d(0)), 
                 m_fastConfig);
-
-            feederUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
-                // Start From outside the ramp 
-                new Pose2d(10.6, 2.7, new Rotation2d(0)),
-                List.of(new Translation2d(11.6, 2.7)),
-                new Pose2d(12.00, 2.7, new Rotation2d(0)),  // was 12.15
-                m_slowConfig);
+            
         } else {
 
             // Protect in case we havent seen the target yet
@@ -388,13 +334,6 @@ public class AutoSubsystem extends SubsystemBase {
                             ),
                 new Pose2d(6.03, 2.74, new Rotation2d(Math.PI)),
                 m_fastConfig);
-
-            feederUpRampFromOutsideRamp = TrajectoryGenerator.generateTrajectory(
-                // Start From outside the ramp 
-                new Pose2d(5.93, 2.7, new Rotation2d(Math.PI)),
-                List.of(new Translation2d(4.95, 2.7)),
-                new Pose2d(4.55, 2.7, new Rotation2d(Math.PI)),  // was 4.4
-                m_slowConfig);
         }
             
         // Run path following command, then stop at the end.
@@ -407,9 +346,8 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             runTrajectory(feederToOutsideRamp),           
             Commands.waitUntil(Shared.inPosition), 
-            Commands.waitSeconds(1),
-            runTrajectory(feederUpRampFromOutsideRamp),
-            //new Balance(m_robotDrive),   // balance the robot  
+            Commands.waitSeconds(0.5),
+            new Balance(m_robotDrive, true),   // balance the robot forward 
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
 

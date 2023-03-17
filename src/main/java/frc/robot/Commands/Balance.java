@@ -12,11 +12,20 @@ public class Balance  extends CommandBase {
 
     private DriveSubsystem  m_driveSystem;
     private final   Timer   m_timer          = new Timer();
-    private final   double  m_backupDistance = -0.10;  // use negative sign to be opposite of approach direction
-    private final   double  m_pitchTrip      =  3.0;  // number of degrees variation before stopping
+    private final   double  m_backupDistance = -0.15;  // use negative sign to be opposite of approach direction
+    private final   double  m_dangerPitch    =  25.0;  // Going uphill
+    private final   double  m_balancedPitch  =   4.0;  // number of degrees variation before stopping
+    private final   double  m_mountingPitch  =   4.0;  // number of degrees variation before stopping
+    private final   double  m_climbingPitch  =  11.0;  // number of degrees variation before stopping
+    private final   double  m_tiltoverPitch  =  10.0;  // number of degrees variation before stopping
+    
+    private final   double  APPROACH_SPEED   =  1.2;
+    private final   double  MOUNT_SPEED      =  1.0;
+    private final   double  CLIMB_SPEED      =  0.4;
+    private final   double  CORRECTING_SPEED =  0.1;
+
 
     private TrapezoidProfile m_profile;
-    private double  initialPitch;                     // the robot pitch when we start levelling.
     private double  approachSign;                     // Are we going fwd or backwards when approaching the ramp
     private BalanceStates state;
   
@@ -27,44 +36,62 @@ public class Balance  extends CommandBase {
      * @param driveSystem Access to the drive
      * @param requirements The subsystems required by this command.
      */
-    public Balance(DriveSubsystem driveSystem) {
+    public Balance(DriveSubsystem driveSystem, boolean forwardApproach) {
       m_driveSystem = driveSystem;
-      m_profile = null;
-      initialPitch = 0;
-      approachSign = 1.0;
+      approachSign = forwardApproach ? 1.0 : -1.0;
       state = BalanceStates.APPROACHING;
       addRequirements(driveSystem);
     }
   
     @Override
     public void initialize() {
-      // determine if we are already balanced, or not
-      initialPitch = m_driveSystem.getPitch();
-      if (Math.abs(initialPitch) < 4) {
-        m_driveSystem.setX();
-        nextState(BalanceStates.WAITING);  
+      double pitchAbs = Math.abs(m_driveSystem.getPitch());
+
+      // determine if we are already on the ramp, and how far
+      if (pitchAbs > m_mountingPitch) {
+        approachSign = Math.signum(m_driveSystem.getPitch());
+        m_driveSystem.move(MOUNT_SPEED * approachSign, 0, 0, false);
+        nextState(BalanceStates.MOUNTING);  
       } else {
-        approachSign = Math.signum(initialPitch);
-        m_driveSystem.move(AutoConstants.kBalanceApproachSpeedMPS * approachSign, 0, 0, false);
+        m_driveSystem.move(APPROACH_SPEED * approachSign, 0, 0, false);
         nextState(BalanceStates.APPROACHING);
       }
     }
   
     @Override
     public void execute() {
+
+      double pitchAbs = Math.abs(m_driveSystem.getPitch());
       // What state are we in?  
       switch(state) {
+
         case APPROACHING:
-          double deltaP = initialPitch - m_driveSystem.getPitch();
-          if (Math.abs(deltaP) > m_pitchTrip) {
-              m_driveSystem.stop();
-              m_profile = driveForward(m_backupDistance * approachSign) ;
-              nextState(BalanceStates.STOPPING);
+          if (pitchAbs > m_mountingPitch) {
+            m_driveSystem.move(MOUNT_SPEED * approachSign, 0, 0, false);
+            nextState(BalanceStates.MOUNTING);  
+          } 
+          break;
+
+        case MOUNTING:
+          if (pitchAbs > m_climbingPitch) {
+            m_driveSystem.move(CLIMB_SPEED * approachSign, 0, 0, false);
+            nextState(BalanceStates.CLIMBING);  
+          } 
+          break;
+
+          case CLIMBING:
+          if (pitchAbs > m_dangerPitch) {
+            m_driveSystem.stop();
+          } else if (m_timer.hasElapsed(2.0) && (pitchAbs < m_tiltoverPitch)) {
+            m_driveSystem.stop();
+            m_profile = driveForward(m_backupDistance * approachSign) ;
+            nextState(BalanceStates.TILTING); 
+          } else {
+            m_driveSystem.move(CLIMB_SPEED * approachSign, 0, 0, false);
           }
-          SmartDashboard.putNumber("delta Pitch", deltaP);
           break;
         
-        case STOPPING:
+        case TILTING:
           m_driveSystem.move(m_profile.calculate(m_timer.get()).velocity, 0, 0, false);
           if (m_timer.hasElapsed(m_profile.totalTime())) {
             m_driveSystem.setX();
@@ -73,30 +100,20 @@ public class Balance  extends CommandBase {
           break;
 
         case WAITING:
-          if (m_timer.hasElapsed(2.0)) {
-            if (Math.abs(m_driveSystem.getPitch()) < 4 ) {
+          if (m_timer.hasElapsed(1.0)) {
+            if (Math.abs(m_driveSystem.getPitch()) < m_balancedPitch ) {
               m_driveSystem.setX();
               nextState(BalanceStates.HOLDING);
             } else {
               approachSign = Math.signum(m_driveSystem.getPitch());  
-              m_profile = driveForward(0.075 * approachSign) ;  // move 3" closer to middle.
-              // nextState(BalanceStates.JUMP_CORRECTING);
               nextState(BalanceStates.SLOW_CORRECTING);
             }
           }
           break;
 
-          case JUMP_CORRECTING:
-          m_driveSystem.move(m_profile.calculate(m_timer.get()).velocity, 0, 0, false);
-          if (m_timer.hasElapsed(m_profile.totalTime())) {
-            m_driveSystem.setX();
-            nextState(BalanceStates.HOLDING);  
-          }
-          break;
-
           case SLOW_CORRECTING:
-          m_driveSystem.move(AutoConstants.kBalanceApproachSpeedMPS * approachSign / 2, 0, 0, false);
-          if (Math.abs(m_driveSystem.getPitch()) < 10 ) {
+          m_driveSystem.move(CORRECTING_SPEED * approachSign , 0, 0, false);
+          if (Math.abs(m_driveSystem.getPitch()) < m_tiltoverPitch ) {
             m_driveSystem.setX();
             nextState(BalanceStates.HOLDING);  
           }
@@ -113,7 +130,7 @@ public class Balance  extends CommandBase {
     private TrapezoidProfile driveForward (double distanceM) {
       return new TrapezoidProfile(
         // Limit the max acceleration and velocity
-        new TrapezoidProfile.Constraints(AutoConstants.kMaxSpeedMPS * 0.5, AutoConstants.kMaxAccelerationMPS2),
+        new TrapezoidProfile.Constraints(CLIMB_SPEED, AutoConstants.kMaxAccelerationMPS2 / 2.0),
         // End at desired position in meters; implicitly starts at 0
         new TrapezoidProfile.State(distanceM, 0 )); 
     }

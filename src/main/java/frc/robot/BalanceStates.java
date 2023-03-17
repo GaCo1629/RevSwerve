@@ -2,9 +2,10 @@ package frc.robot;
 
 public enum BalanceStates {
     APPROACHING,
-    STOPPING,
+    MOUNTING,
+    CLIMBING,
+    TILTING,
     WAITING,
-    JUMP_CORRECTING,
     SLOW_CORRECTING,
     HOLDING
 }
