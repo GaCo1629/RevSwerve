@@ -219,22 +219,22 @@ public final class Constants {
     public static final double kMaxArmAcceleration = 1.0 ;
 
    
-    public static final double kConeCollectPower  = -0.5 ;
+    public static final double kConeCollectPower  = -0.75 ;
     public static final double kConeAutoEjectPower = -0.3 ;
-    public static final double kConeHoldPower     = -0.1 ; //was -.05
+    public static final double kConeHoldPower     = -0.15 ; //was -.05
     public static final double kConeEjectPower    =  0.2 ;
-    public static final double kCubeCollectPower  =  0.3 ;
-    public static final double kCubeHoldPower     =  0.05 ;
+    public static final double kCubeCollectPower  =  0.4 ;
+    public static final double kCubeHoldPower     =  0.1 ;
     public static final double kCubeEjectPower    = -0.2 ;
     
-    public static final double kArmConeBot = 0.21;
+    public static final double kArmConeBot = 0.23;
     public static final double kArmConeMid = 0.46;
-    public static final double kArmConeTop = 0.56;
+    public static final double kArmConeTop = 0.59;
     public static final double kArmCubeBot = 0.26;
-    public static final double kArmCubeMid = 0.42;
-    public static final double kArmCubeTop = 0.52;
-    public static final double kArmConeFeeder = 0.53;
-    public static final double kArmCubeFeeder = 0.51;
+    public static final double kArmCubeMid = 0.48;
+    public static final double kArmCubeTop = 0.55;
+    public static final double kArmConeFeeder = 0.54;
+    public static final double kArmCubeFeeder = 0.52;
     public static final double kArmHome = 0.16;
     public static final double kArmGround = 0.36;
     public static final double kArmConeGround = 0.38;
@@ -243,7 +243,7 @@ public final class Constants {
     
     public static final double kArmBackstop = 0.16;   
     public static final double kArmBackstopTrigger = 0.18;   
-    public static final double kArmSafeToSpinn = 0.18;   
+    public static final double kArmSafeToSpinn = 0.23;   
     public static final double kArmBackPower = -0.04;
 
     public static final int    kLEDpwmID  = 9 ;

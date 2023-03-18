@@ -100,7 +100,7 @@ public class Balance  extends CommandBase {
           break;
 
         case WAITING:
-          if (m_timer.hasElapsed(1.0)) {
+          if (m_timer.hasElapsed(0.75)) {
             if (Math.abs(m_driveSystem.getPitch()) < m_balancedPitch ) {
               m_driveSystem.setX();
               nextState(BalanceStates.HOLDING);
