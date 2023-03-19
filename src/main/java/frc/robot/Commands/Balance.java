@@ -17,18 +17,18 @@ public class Balance  extends CommandBase {
     private final   double  m_balancedPitch  =   4.0;  // number of degrees variation before stopping
     private final   double  m_mountingPitch  =   4.0;  // number of degrees variation before stopping
     private final   double  m_climbingPitch  =  11.0;  // number of degrees variation before stopping
-    private final   double  m_tiltoverPitch  =  10.0;  // number of degrees variation before stopping
     
     private final   double  APPROACH_SPEED   =  1.2;
     private final   double  MOUNT_SPEED      =  1.0;
-    private final   double  CLIMB_SPEED      =  0.4;
+    private final   double  CLIMB_SPEED      =  0.5;
+    private final   double  CRAWL_SPEED      =  0.2;
     private final   double  CORRECTING_SPEED =  0.1;
 
-
+    private BalanceStates m_state;
     private TrapezoidProfile m_profile;
-    private double  approachSign;                     // Are we going fwd or backwards when approaching the ramp
-    private BalanceStates state;
-  
+    private double  m_tiltoverPitch  =  0.0;   // number of degrees variation before stopping
+    private double  m_approachSign;             // Are we going fwd or backwards when approaching the ramp
+     
     /**
      * Creates a new TrapezoidProfileCommand that will execute the given {@link TrapezoidProfile}.
      * Output will be piped to the provided consumer function.
@@ -37,9 +37,10 @@ public class Balance  extends CommandBase {
      * @param requirements The subsystems required by this command.
      */
     public Balance(DriveSubsystem driveSystem, boolean forwardApproach) {
+      SmartDashboard.putNumber("tiltover pitch", 0);
       m_driveSystem = driveSystem;
-      approachSign = forwardApproach ? 1.0 : -1.0;
-      state = BalanceStates.APPROACHING;
+      m_approachSign = forwardApproach ? 1.0 : -1.0;
+      m_state = BalanceStates.APPROACHING;
       addRequirements(driveSystem);
     }
   
@@ -49,11 +50,11 @@ public class Balance  extends CommandBase {
 
       // determine if we are already on the ramp, and how far
       if (pitchAbs > m_mountingPitch) {
-        approachSign = Math.signum(m_driveSystem.getPitch());
-        m_driveSystem.move(MOUNT_SPEED * approachSign, 0, 0, false);
+        m_approachSign = Math.signum(m_driveSystem.getPitch());
+        m_driveSystem.move(MOUNT_SPEED * m_approachSign, 0, 0, false);
         nextState(BalanceStates.MOUNTING);  
       } else {
-        m_driveSystem.move(APPROACH_SPEED * approachSign, 0, 0, false);
+        m_driveSystem.move(APPROACH_SPEED * m_approachSign, 0, 0, false);
         nextState(BalanceStates.APPROACHING);
       }
     }
@@ -63,18 +64,18 @@ public class Balance  extends CommandBase {
 
       double pitchAbs = Math.abs(m_driveSystem.getPitch());
       // What state are we in?  
-      switch(state) {
+      switch(m_state) {
 
         case APPROACHING:
           if (pitchAbs > m_mountingPitch) {
-            m_driveSystem.move(MOUNT_SPEED * approachSign, 0, 0, false);
+            m_driveSystem.move(MOUNT_SPEED * m_approachSign, 0, 0, false);
             nextState(BalanceStates.MOUNTING);  
           } 
           break;
 
         case MOUNTING:
           if (pitchAbs > m_climbingPitch) {
-            m_driveSystem.move(CLIMB_SPEED * approachSign, 0, 0, false);
+            m_driveSystem.move(CLIMB_SPEED * m_approachSign, 0, 0, false);
             nextState(BalanceStates.CLIMBING);  
           } 
           break;
@@ -82,12 +83,23 @@ public class Balance  extends CommandBase {
           case CLIMBING:
           if (pitchAbs > m_dangerPitch) {
             m_driveSystem.stop();
-          } else if (m_timer.hasElapsed(2.0) && (pitchAbs < m_tiltoverPitch)) {
+          } else if (m_timer.hasElapsed(2.0)) {
+            m_tiltoverPitch = Math.max(pitchAbs - 2.0, 10.0) ;
+            m_driveSystem.move(CRAWL_SPEED * m_approachSign, 0, 0, false);
+            nextState(BalanceStates.CRAWLING); 
+            SmartDashboard.putNumber("tiltover pitch", m_tiltoverPitch);
+          } else {
+            m_driveSystem.move(CLIMB_SPEED * m_approachSign, 0, 0, false);
+          }
+          break;
+        
+          case CRAWLING:
+            if (pitchAbs < m_tiltoverPitch) {
             m_driveSystem.stop();
-            m_profile = driveForward(m_backupDistance * approachSign) ;
+            m_profile = driveForward(m_backupDistance * m_approachSign) ;
             nextState(BalanceStates.TILTING); 
           } else {
-            m_driveSystem.move(CLIMB_SPEED * approachSign, 0, 0, false);
+            m_driveSystem.move(CRAWL_SPEED * m_approachSign, 0, 0, false);
           }
           break;
         
@@ -100,19 +112,18 @@ public class Balance  extends CommandBase {
           break;
 
         case WAITING:
-          if (m_timer.hasElapsed(0.75)) {
+          if (m_timer.hasElapsed(0.50)) {
             if (Math.abs(m_driveSystem.getPitch()) < m_balancedPitch ) {
               m_driveSystem.setX();
               nextState(BalanceStates.HOLDING);
             } else {
-              approachSign = Math.signum(m_driveSystem.getPitch());  
               nextState(BalanceStates.SLOW_CORRECTING);
             }
           }
           break;
 
           case SLOW_CORRECTING:
-          m_driveSystem.move(CORRECTING_SPEED * approachSign , 0, 0, false);
+          m_driveSystem.move(CORRECTING_SPEED * Math.signum(m_driveSystem.getPitch()) , 0, 0, false);
           if (Math.abs(m_driveSystem.getPitch()) < m_tiltoverPitch ) {
             m_driveSystem.setX();
             nextState(BalanceStates.HOLDING);  
@@ -124,8 +135,9 @@ public class Balance  extends CommandBase {
           break;
        
       }
-      SmartDashboard.putString("Balancing", state.toString()); 
+      SmartDashboard.putString("Balancing", m_state.toString()); 
     }
+    
 
     private TrapezoidProfile driveForward (double distanceM) {
       return new TrapezoidProfile(
@@ -136,7 +148,7 @@ public class Balance  extends CommandBase {
     }
 
     private void nextState(BalanceStates newState) {
-      state = newState;
+      m_state = newState;
       m_timer.restart();
     }
   
@@ -148,7 +160,7 @@ public class Balance  extends CommandBase {
   
     @Override
     public boolean isFinished() {
-      return (state == BalanceStates.HOLDING);
+      return (m_state == BalanceStates.HOLDING);
     }
   }
   
