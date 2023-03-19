@@ -276,9 +276,12 @@ public class GPMSubsystem extends SubsystemBase {
         // Run the arm PID and apply the velocity profile.
         Shared.armPosition = m_armEncoder.getPosition();
         double armOutput = m_armPID.calculate(Shared.armPosition, m_armSetpoint);
+        
+        /*
         if (armOutput < 0){
             armOutput *= 0.75;
         } 
+        */
 
         // lock arm against backstop
         if ((m_armSetpoint <= GPMConstants.kArmBackstop) && (Shared.armPosition < GPMConstants.kArmBackstopTrigger)) {
