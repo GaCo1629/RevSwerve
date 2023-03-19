@@ -5,7 +5,6 @@ public enum BalanceStates {
     MOUNTING,
     CLIMBING,
     CRAWLING,
-    TILTING,
     WAITING,
     SLOW_CORRECTING,
     HOLDING

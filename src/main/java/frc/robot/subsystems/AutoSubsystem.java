@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -19,8 +18,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
-import edu.wpi.first.wpilibj2.command.TrapezoidProfileCommand;
 import frc.robot.Shared;
+import frc.robot.Commands.Axial;
 import frc.robot.Commands.Balance;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
@@ -30,16 +29,15 @@ public class AutoSubsystem extends SubsystemBase {
      
     private DriveSubsystem          m_robotDrive ;
     private GPMSubsystem            m_GPM; 
-    private TrajectoryConfig        m_slowConfig;
-    private TrajectoryConfig        m_slowRevConfig;
     private TrajectoryConfig        m_fastConfig;
 
     private PIDController           m_xController;
     private PIDController           m_yController;    
     private ProfiledPIDController   m_hController;
     
-    private final   int             m_numAutos = 6;
-    private final   String[]        m_autoNames = {"DO NOTHING", 
+    private final   int             m_numAutos = 7;
+    private final   String[]        m_autoNames = {"Score CUBE", 
+                                    "Score CONE",
                                     "WALL start with RAMP", 
                                     "CENTER start with RAMP", 
                                     "FEEDER Start with RAMP",
@@ -65,7 +63,7 @@ public class AutoSubsystem extends SubsystemBase {
 
         // Put the chooser on the dashboard
         SmartDashboard.putData(m_chooser);  
-        m_chooser.setDefaultOption("Choose an Auto", 0);
+        m_chooser.setDefaultOption("Choose Auto: Score CUBE", 0);
         for (int m = 1; m < m_numAutos; m++) {
             m_chooser.addOption(m_autoNames[m], m);
         }
@@ -89,21 +87,24 @@ public class AutoSubsystem extends SubsystemBase {
         switch (m_chooser.getSelected()) {
             case 0:
             default:
-            return getDoNothing();
+            return getNoMoveScoreCube();
             
             case 1:
+            return getNoMoveScoreCone();
+            
+            case 2:
             return getWallRampAuto();
         
-            case 2:
+            case 3:
             return getCenterRampAuto();
         
-            case 3:
+            case 4:
             return getFeederRampAuto();
         
-            case 4:
+            case 5:
             return getWallNoRampAuto();
         
-            case 5:
+            case 6:
             return getFeederNoRampAuto();
         }
     }
@@ -123,7 +124,7 @@ public class AutoSubsystem extends SubsystemBase {
     
 
     // ================================================================================================
-    public Command getDoNothing(){
+    public Command getNoMoveScoreCube(){
         // Just score
         return Commands.sequence(
             m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
@@ -131,6 +132,25 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
             Commands.waitSeconds(1),
             m_GPM.runCollectorCmd(0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            Commands.repeatingSequence(m_robotDrive.stopCmd())
+        );
+    }
+
+    // ================================================================================================
+    public Command getNoMoveScoreCone(){
+        // Just score
+        return Commands.sequence(
+            m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower),
+            new Axial(m_robotDrive, -0.5, 1.0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmConeTop),
+            Commands.waitUntil(Shared.inPosition),
+            new Axial(m_robotDrive, 0.35, 0.5),
+            Commands.waitSeconds(0.5),
+            m_GPM.runCollectorCmd(GPMConstants.kConeEjectPower),
+            Commands.waitSeconds(1),
+            m_GPM.runCollectorCmd(0),
+            new Axial(m_robotDrive, -0.1, 1.0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.repeatingSequence(m_robotDrive.stopCmd())
         );

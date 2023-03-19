@@ -12,7 +12,6 @@ public class Balance  extends CommandBase {
 
     private DriveSubsystem  m_driveSystem;
     private final   Timer   m_timer          = new Timer();
-    private final   double  m_backupDistance = -0.15;  // use negative sign to be opposite of approach direction
     private final   double  m_dangerPitch    =  25.0;  // Going uphill
     private final   double  m_balancedPitch  =   4.0;  // number of degrees variation before stopping
     private final   double  m_mountingPitch  =   4.0;  // number of degrees variation before stopping
@@ -25,7 +24,6 @@ public class Balance  extends CommandBase {
     private final   double  CORRECTING_SPEED =  0.1;
 
     private BalanceStates m_state;
-    private TrapezoidProfile m_profile;
     private double  m_tiltoverPitch  =  0.0;   // number of degrees variation before stopping
     private double  m_approachSign;             // Are we going fwd or backwards when approaching the ramp
      
@@ -70,47 +68,49 @@ public class Balance  extends CommandBase {
           if (pitchAbs > m_mountingPitch) {
             m_driveSystem.move(MOUNT_SPEED * m_approachSign, 0, 0, false);
             nextState(BalanceStates.MOUNTING);  
-          } 
+          } else if (m_timer.hasElapsed(3.5)) {
+            // we have messed up, just stop.
+            m_driveSystem.stop();
+            nextState(BalanceStates.HOLDING);
+          }
           break;
 
         case MOUNTING:
           if (pitchAbs > m_climbingPitch) {
             m_driveSystem.move(CLIMB_SPEED * m_approachSign, 0, 0, false);
             nextState(BalanceStates.CLIMBING);  
-          } 
+          } else if (m_timer.hasElapsed(3.5)) {
+            // we have messed up, just stop.
+            m_driveSystem.stop();
+            nextState(BalanceStates.HOLDING);
+          }
           break;
 
-          case CLIMBING:
+        case CLIMBING:
           if (pitchAbs > m_dangerPitch) {
             m_driveSystem.stop();
           } else if (m_timer.hasElapsed(2.0)) {
             m_tiltoverPitch = Math.max(pitchAbs - 2.0, 10.0) ;
             m_driveSystem.move(CRAWL_SPEED * m_approachSign, 0, 0, false);
             nextState(BalanceStates.CRAWLING); 
-            SmartDashboard.putNumber("tiltover pitch", m_tiltoverPitch);
+            SmartDashboard.putNumber("tiltover pitch", m_driveSystem.getPitch());
           } else {
             m_driveSystem.move(CLIMB_SPEED * m_approachSign, 0, 0, false);
           }
           break;
         
-          case CRAWLING:
-            if (pitchAbs < m_tiltoverPitch) {
+        case CRAWLING:
+          if (pitchAbs < m_tiltoverPitch) {
             m_driveSystem.stop();
-            m_profile = driveForward(m_backupDistance * m_approachSign) ;
-            nextState(BalanceStates.TILTING); 
+            m_tiltoverPitch = pitchAbs;
+            SmartDashboard.putNumber("tiltover pitch", m_driveSystem.getPitch());
+            nextState(BalanceStates.WAITING); 
+            
           } else {
             m_driveSystem.move(CRAWL_SPEED * m_approachSign, 0, 0, false);
           }
           break;
         
-        case TILTING:
-          m_driveSystem.move(m_profile.calculate(m_timer.get()).velocity, 0, 0, false);
-          if (m_timer.hasElapsed(m_profile.totalTime())) {
-            m_driveSystem.setX();
-            nextState(BalanceStates.WAITING);  
-          }
-          break;
-
         case WAITING:
           if (m_timer.hasElapsed(0.50)) {
             if (Math.abs(m_driveSystem.getPitch()) < m_balancedPitch ) {
