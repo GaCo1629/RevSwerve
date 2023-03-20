@@ -196,7 +196,7 @@ public final class Constants {
     public static final double kIHeadingLockController = 0;
     public static final double kDHeadingLockController = 0; 
 
-    public static final double kNotRotating = 0.25;  // degrees per second was 0.5
+    public static final double kNotRotating = 0.5;  // degrees per second was 0.5
   }
 
   public static final class NeoMotorConstants {
@@ -229,12 +229,12 @@ public final class Constants {
     
     public static final double kArmConeBot = 0.23;
     public static final double kArmConeMid = 0.46;
-    public static final double kArmConeTop = 0.59;
+    public static final double kArmConeTop = 0.57; // was 0.59
     public static final double kArmCubeBot = 0.26;
     public static final double kArmCubeMid = 0.48;
     public static final double kArmCubeTop = 0.55;
-    public static final double kArmConeFeeder = 0.54;
-    public static final double kArmCubeFeeder = 0.52;
+    public static final double kArmConeFeeder = 0.55;
+    public static final double kArmCubeFeeder = 0.54;
     public static final double kArmHome = 0.16;
     public static final double kArmGround = 0.36;
     public static final double kArmConeGround = 0.38;
@@ -263,7 +263,7 @@ public final class Constants {
     public static final double [] blueFeederY  = {7.0,6.0};
     public static final double redGridX     = 14.0;
     public static final double blueGridX    =  2.5;
-    public static final double redFeederX   =  4.5;
+    public static final double redFeederX   =  2.0;
     public static final double blueFeederX  = 13.0;
     public static final double redFeederDir  = Math.PI;
     public static final double blueFeederDir = 0;

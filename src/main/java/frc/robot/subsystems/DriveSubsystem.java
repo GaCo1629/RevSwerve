@@ -69,6 +69,8 @@ public class DriveSubsystem extends SubsystemBase {
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
   
   private PS4Controller driver;
+  private Joystick copilot_1;
+  private Joystick copilot_2;
   private ProfiledPIDController headingLockController;
   private ProfiledPIDController xController;
   private ProfiledPIDController yController;
@@ -91,6 +93,8 @@ public class DriveSubsystem extends SubsystemBase {
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem(PS4Controller driver, Joystick copilot_1, Joystick copilot_2) {
     this.driver = driver;
+    this.copilot_1 = copilot_1;
+    this.copilot_2 = copilot_2;
 
     headingLockController = new ProfiledPIDController(AutoConstants.kPHeadingLockController, 0, 0, AutoConstants.kHeadingLockConstraints );
     headingLockController.enableContinuousInput(-Math.PI, Math.PI);
@@ -285,16 +289,18 @@ public class DriveSubsystem extends SubsystemBase {
 
     // Determine how far out from the min range we are.
     // only use this data to boost speed if we are pointing in the correct direction 
-    if (DriverStation.getAlliance() == Alliance.Red) {
-      if (Math.abs(MathUtil.angleModulus(NavConstants.redFeederDir - getHeading())) < (Math.PI / 4)) {
-        xError = Shared.currentPose.getX() - NavConstants.redFeederX ;
-      }
-    } else {
-      if (Math.abs(MathUtil.angleModulus(NavConstants.blueFeederDir - getHeading())) < (Math.PI / 4)) {
-        xError = NavConstants.blueFeederX  - Shared.currentPose.getX() ;
+    if(copilot_1.getRawButton(OIConstants.kCP1ExtendFeeder)){
+      if (DriverStation.getAlliance() == Alliance.Red) {
+        if (Math.abs(MathUtil.angleModulus(NavConstants.redFeederDir - getHeading())) < (Math.PI / 4)) {
+          xError = Shared.currentPose.getX() - NavConstants.redFeederX ;
+        }
+      } else {
+        if (Math.abs(MathUtil.angleModulus(NavConstants.blueFeederDir - getHeading())) < (Math.PI / 4)) {
+          xError = NavConstants.blueFeederX  - Shared.currentPose.getX() ;
+        }
       }
     }
-
+    
     xError = Math.min(xError, 1.0);
     if (xError > 0) {
       rate += xError * DriveConstants.kDPADSpeed;
