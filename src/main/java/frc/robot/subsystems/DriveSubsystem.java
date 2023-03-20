@@ -30,6 +30,7 @@ import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.GPMConstants;
+import frc.robot.Constants.NavConstants;
 import frc.robot.Constants.OIConstants;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -124,7 +125,7 @@ public class DriveSubsystem extends SubsystemBase {
     if(driver.getRawButtonPressed(OIConstants.kDriverGyroReset)){
       resetGyroToZero();
       lockCurrentHeading();
-      resetOdometry(new Pose2d());  // Temporary
+      // resetOdometry(new Pose2d());  // Temporary
     }
 
     // Update the odometry in the periodic block
@@ -218,7 +219,7 @@ public class DriveSubsystem extends SubsystemBase {
       }
     } else if (driver.getCircleButton()) {
       // determine desired approach speed
-      xSpeed = DriveConstants.kMinApproachSpeed;
+      xSpeed = getHumanApproachRate();
     }
 
     // look to flip direction
@@ -270,9 +271,38 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putBoolean("Heading Locked", headingLocked);
     SmartDashboard.putString("Target", Shared.targetPose.toString());
   }
+  
+  /***
+   * Determines the fastest way to get to human player station pickup point.
+   * Use the current robot pose and compares wth the desired X value of the red/blue feeder station.
+   * Maxes out at the current DPAD movement rate.
+   * 
+   * @return  Variable Joystick rate for setting forward speed.
+   */
+  private double getHumanApproachRate() {
+    double xError = 0;
+    double rate = DriveConstants.kMinApproachRate;
 
-  public void setForwardSpeed(TrapezoidProfile.State setPoint) {
-    move(setPoint.velocity, 0, 0, false);
+    // Determine how far out from the min range we are.
+    // only use this data to boost speed if we are pointing in the correct direction 
+    if (DriverStation.getAlliance() == Alliance.Red) {
+      if (Math.abs(MathUtil.angleModulus(NavConstants.redFeederDir - getHeading())) < (Math.PI / 4)) {
+        xError = Shared.currentPose.getX() - NavConstants.redFeederX ;
+      }
+    } else {
+      if (Math.abs(MathUtil.angleModulus(NavConstants.blueFeederDir - getHeading())) < (Math.PI / 4)) {
+        xError = NavConstants.blueFeederX  - Shared.currentPose.getX() ;
+      }
+    }
+
+    xError = Math.min(xError, 1.0);
+    if (xError > 0) {
+      rate += xError * DriveConstants.kDPADSpeed;
+    }
+
+    SmartDashboard.putNumber("Human Distance", xError);
+    SmartDashboard.putNumber("Human Rate",     rate);
+    return rate;
   }
 
   public void initDrivePIDs() {

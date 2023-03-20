@@ -50,7 +50,7 @@ public final class Constants {
     public static final double kSpeedFactor = 0.75;
     public static final double kTurnFactor  = 0.70; 
     public static final double kDPADSpeed   = 0.20; 
-    public static final double kMinApproachSpeed = 0.075;
+    public static final double kMinApproachRate = 0.075;
 
     public static final double kMagnitudeSlewRate = 1.8; // percent per second (1 = 100%)
     public static final double kRotationalSlewRate = 1.8; // percent per second (1 = 100%)
@@ -196,7 +196,7 @@ public final class Constants {
     public static final double kIHeadingLockController = 0;
     public static final double kDHeadingLockController = 0; 
 
-    public static final double kNotRotating = 0.5 ;  // degrees per second was 1.0
+    public static final double kNotRotating = 0.25;  // degrees per second was 0.5
   }
 
   public static final class NeoMotorConstants {
@@ -265,6 +265,8 @@ public final class Constants {
     public static final double blueGridX    =  2.5;
     public static final double redFeederX   =  4.5;
     public static final double blueFeederX  = 13.0;
+    public static final double redFeederDir  = Math.PI;
+    public static final double blueFeederDir = 0;
   }
 }
  
