@@ -227,14 +227,14 @@ public final class Constants {
     public static final double kCubeHoldPower     =  0.1 ;
     public static final double kCubeEjectPower    = -0.2 ;
     
-    public static final double kArmConeBot = 0.23;
-    public static final double kArmConeMid = 0.46;
-    public static final double kArmConeTop = 0.57; // was 0.59
-    public static final double kArmCubeBot = 0.26;
-    public static final double kArmCubeMid = 0.48;
-    public static final double kArmCubeTop = 0.55;
-    public static final double kArmConeFeeder = 0.55;
-    public static final double kArmCubeFeeder = 0.54;
+    public static final double kArmConeBot = 0.23; // height = 19.25"
+    public static final double kArmConeMid = 0.46; // height = 40"
+    public static final double kArmConeTop = 0.57; // height = 53.5"
+    public static final double kArmCubeBot = 0.26; // height = 21.75"
+    public static final double kArmCubeMid = 0.48; // height = 42"
+    public static final double kArmCubeTop = 0.55; // height = 51.25"
+    public static final double kArmConeFeeder = 0.55; // height in = 51.125"
+    public static final double kArmCubeFeeder = 0.54; // height in = 49.5"
     public static final double kArmHome = 0.16;
     public static final double kArmGround = 0.36;
     public static final double kArmConeGround = 0.38;
