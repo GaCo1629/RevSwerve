@@ -135,7 +135,7 @@ public class Balance  extends CommandBase {
           break;
        
       }
-      SmartDashboard.putString("Balancing", m_state.toString()); 
+      SmartDashboard.putString("Balance State", m_state.toString()); 
     }
     
 

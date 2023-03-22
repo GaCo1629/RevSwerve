@@ -264,7 +264,7 @@ public final class Constants {
     public static final double redGridX     = 14.0;
     public static final double blueGridX    =  2.5;
     public static final double redFeederX   =  2.0;
-    public static final double blueFeederX  = 13.0;
+    public static final double blueFeederX  = 14.54;
     public static final double redFeederDir  = Math.PI;
     public static final double blueFeederDir = 0;
   }

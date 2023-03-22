@@ -78,6 +78,7 @@ public class DriveSubsystem extends SubsystemBase {
   private boolean headingLocked = false;
   private double  currentHeading = 0;
   private double  headingSetpoint = 0;  
+  private boolean disableZoom = false;
 
   // Odometry class for tracking robot pose
   SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
@@ -121,6 +122,8 @@ public class DriveSubsystem extends SubsystemBase {
     for (int i=1; i < 10; i++) {
       driver.getRawButtonPressed(i);
     }
+    disableZoom = SmartDashboard.putBoolean("Disable Zoom", false);
+   
   }
 
   @Override
@@ -153,11 +156,13 @@ public class DriveSubsystem extends SubsystemBase {
           
           m_odometry.addVisionMeasurement(gyroCamPose2d, camPose.timestampSeconds);
       }
+
     }
      
     // Share current position
     Shared.currentPose = getPose();
-
+    
+    
     SmartDashboard.putString("Est Pose", getPose().toString());
     SmartDashboard.putNumber("Field Y", getPose().getY());
     SmartDashboard.putNumber("Heading Deg", Math.toDegrees(getHeading()));
@@ -165,6 +170,9 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Position", Shared.gridNumber);
     SmartDashboard.putNumber( "Pitch", getPitch());
     SmartDashboard.putNumber( "Roll",  getRoll());
+
+    disableZoom = SmartDashboard.getBoolean("Disable Zoom", false);
+    SmartDashboard.putBoolean("Zoom Disabled", disableZoom);
   }
 
   /**
@@ -289,7 +297,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     // Determine how far out from the min range we are.
     // only use this data to boost speed if we are pointing in the correct direction 
-    if(copilot_1.getRawButton(OIConstants.kCP1ExtendFeeder)){
+    if(!disableZoom && copilot_1.getRawButton(OIConstants.kCP1ExtendFeeder)){
       if (DriverStation.getAlliance() == Alliance.Red) {
         if (Math.abs(MathUtil.angleModulus(NavConstants.redFeederDir - getHeading())) < (Math.PI / 4)) {
           xError = Shared.currentPose.getX() - NavConstants.redFeederX ;
@@ -307,6 +315,7 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     SmartDashboard.putNumber("Human Distance", xError);
+    SmartDashboard.putNumber("Human Angle", Math.abs(MathUtil.angleModulus(NavConstants.blueFeederDir - getHeading())));
     SmartDashboard.putNumber("Human Rate",     rate);
     return rate;
   }
