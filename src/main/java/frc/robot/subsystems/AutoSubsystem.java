@@ -51,7 +51,7 @@ public class AutoSubsystem extends SubsystemBase {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
         
-        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.8,
+        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.6,
                                               AutoConstants.kMaxAccelerationMPS2);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
 
