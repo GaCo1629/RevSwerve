@@ -64,7 +64,7 @@ public class GPMSubsystem extends SubsystemBase {
         m_armPID.setIntegratorRange(-GPMConstants.kArmMaxI, GPMConstants.kArmMaxI);
        
         m_armEncoder = m_armRightMax.getAbsoluteEncoder(Type.kDutyCycle);  
-        blinkyLEDs.set(DriverStation.getAlliance() == Alliance.Blue ? GPMConstants.kBlueColor : GPMConstants.kRedColor);
+        //blinkyLEDs.set(DriverStation.getAlliance() == Alliance.Blue ? GPMConstants.kBlueColor : GPMConstants.kRedColor);
         liftGPM();
     }
 
@@ -84,6 +84,7 @@ public class GPMSubsystem extends SubsystemBase {
             copilot_2.getRawButtonReleased(i);
             
         } 
+        blinkyLEDs.set(DriverStation.getAlliance() == Alliance.Blue ? GPMConstants.kBlueColor : GPMConstants.kRedColor);
     }
     
     /**
