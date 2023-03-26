@@ -63,9 +63,13 @@ public class AutoSubsystem extends SubsystemBase {
 
         // Put the chooser on the dashboard
         SmartDashboard.putData(m_chooser);  
-        m_chooser.setDefaultOption("Choose Auto: Score CUBE", 0);
-        for (int m = 1; m < m_numAutos; m++) {
-            m_chooser.addOption(m_autoNames[m], m);
+        //m_chooser.setDefaultOption("Choose Auto: Score CUBE", 0);
+        for (int m = 0; m < m_numAutos; m++) {
+            if (m == 3)
+                m_chooser.setDefaultOption(m_autoNames[m], m);
+             else
+                m_chooser.addOption(m_autoNames[m], m);
+    
         }
     }
 
@@ -86,7 +90,6 @@ public class AutoSubsystem extends SubsystemBase {
     public Command getAutonomousCommand() {
         switch (m_chooser.getSelected()) {
             case 0:
-            default:
             return getNoMoveScoreCube();
             
             case 1:
@@ -96,6 +99,7 @@ public class AutoSubsystem extends SubsystemBase {
             return getWallRampAuto();
         
             case 3:
+            default:
             return getCenterRampAuto();
         
             case 4:
