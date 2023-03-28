@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.BalanceStates;
-import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class Balance  extends CommandBase {
@@ -138,15 +137,6 @@ public class Balance  extends CommandBase {
       SmartDashboard.putString("Balance State", m_state.toString()); 
     }
     
-
-    private TrapezoidProfile driveForward (double distanceM) {
-      return new TrapezoidProfile(
-        // Limit the max acceleration and velocity
-        new TrapezoidProfile.Constraints(CLIMB_SPEED, AutoConstants.kMaxAccelerationMPS2 / 2.0),
-        // End at desired position in meters; implicitly starts at 0
-        new TrapezoidProfile.State(distanceM, 0 )); 
-    }
-
     private void nextState(BalanceStates newState) {
       m_state = newState;
       m_timer.restart();

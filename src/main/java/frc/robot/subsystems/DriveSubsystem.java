@@ -24,7 +24,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.PhotonCameraWrapper;
 import frc.robot.Shared;
 import frc.robot.Constants.AutoConstants;
@@ -111,6 +110,7 @@ public class DriveSubsystem extends SubsystemBase {
   public CommandBase stopCmd() {return this.runOnce(() -> stop());}
   public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
   public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
+  public CommandBase newHeadingSetpointCmd(double newSetpoint) {return this.runOnce(() -> newHeadingSetpoint(newSetpoint));}
 
 
  
@@ -123,6 +123,9 @@ public class DriveSubsystem extends SubsystemBase {
       driver.getRawButtonPressed(i);
     }
     disableZoom = SmartDashboard.putBoolean("Disable Zoom", false);
+
+    // square up the robot by setting the heading to 0 or 180
+    squareUp();
    
   }
 
@@ -135,6 +138,7 @@ public class DriveSubsystem extends SubsystemBase {
       // resetOdometry(new Pose2d());  // Temporary
     }
 
+   
     // Update the odometry in the periodic block
     m_odometry.update(
       Rotation2d.fromRadians(getHeading()),
@@ -211,13 +215,26 @@ public class DriveSubsystem extends SubsystemBase {
     double xSpeedLimited;
     double ySpeedLimited;
     double turnSpeedLimited ;
+    double xSpeed    ;
+    double ySpeed    ;
+    double turnSpeed ;
 
-    currentHeading = getHeading(); 
+    getHeading(); 
     
-    double xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband) *  DriveConstants.kSpeedFactor;
-    double ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband) * DriveConstants.kSpeedFactor;
-    double turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband) * DriveConstants.kTurnFactor;
+    if (!driver.getL1Button()) {
+      xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband) *  DriveConstants.kSpeedFactor;
+      ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband) * DriveConstants.kSpeedFactor;
+      turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband) * DriveConstants.kTurnFactor;
+    } else {
+      xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveReallyDeadband) *  DriveConstants.kSpeedFactor;
+      ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveReallyDeadband) * DriveConstants.kSpeedFactor;
+      turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveReallyDeadband) * DriveConstants.kTurnFactor;
+    }
     
+    if(driver.getRawButtonPressed(OIConstants.kDriverSquareUp)){
+      squareUp();  //  point to 0 or 180.  Whichever is closest
+    }
+
     // Drive with pure motions
     int POV = driver.getPOV();
     if (POV >= 0) {
@@ -271,7 +288,7 @@ public class DriveSubsystem extends SubsystemBase {
     // Drive based on current goals.
     if (driver.getCircleButton()) {
       move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, false); // Drive Forward to collect game piece
-    } else if(driver.getL1Button() && driver.getL2Button()){
+    } else if(driver.getL2Button()){
       setX(); 
     } else {
       move(xSpeedMPS, ySpeedMPS, turnSpeedRPS, true);  // Drive based on field centric commands
@@ -339,8 +356,15 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public void lockCurrentHeading() {
-    currentHeading = getHeading(); 
-    newHeadingSetpoint(currentHeading);
+    newHeadingSetpoint(getHeading());
+  }
+
+  public void squareUp() {
+    if (Math.abs(getHeading()) < Math.PI / 2) {
+      newHeadingSetpoint(0);
+    } else {
+      newHeadingSetpoint(Math.PI);
+    }
   }
 
   public void useAprilTags(boolean useTags) {
@@ -369,8 +393,13 @@ public class DriveSubsystem extends SubsystemBase {
     }
   }
 
+  /***
+   * Reads heading from gyro, adjusts for field orientation and sets current Heading member.
+   * @return
+   */
   public double getHeading() {
-      return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FieldOffset, Math.PI * 2);
+    currentHeading = Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + gyro2FieldOffset, Math.PI * 2);
+      return currentHeading;
   }
 
   public double getPitch() {

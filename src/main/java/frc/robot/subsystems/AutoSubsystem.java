@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Shared;
 import frc.robot.Commands.Axial;
 import frc.robot.Commands.Balance;
+import frc.robot.Commands.Yaw;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.GPMConstants;
@@ -396,10 +397,9 @@ public class AutoSubsystem extends SubsystemBase {
                 // Pass through these two interior waypoints, making an 's' curve path
                 List.of(    new Translation2d(13.5, 4.7), 
                             new Translation2d(12.5, 4.7),
-                            new Translation2d(11.5, 4.7),
-                            new Translation2d(10.5, 4.2)
+                            new Translation2d(11.5, 4.7)
                             ),
-                new Pose2d(10.5, 3.7, new Rotation2d(0)),
+                new Pose2d(10.5, 5.3, new Rotation2d(0)),
                 m_fastConfig);
         } else {
 
@@ -415,9 +415,9 @@ public class AutoSubsystem extends SubsystemBase {
                 List.of(    new Translation2d(3.03, 4.7), 
                             new Translation2d(4.03, 4.7),
                             new Translation2d(5.03, 4.7),
-                            new Translation2d(6.03, 4.2)
+                            new Translation2d(6.03, 5.2)
                             ),
-                new Pose2d(6.03, 3.7, new Rotation2d(Math.PI)),
+                new Pose2d(6.03, 5.3, new Rotation2d(Math.PI)),
                 m_fastConfig);
         }
             
@@ -431,7 +431,9 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.waitUntil(Shared.inPosition), 
             //m_robotDrive.useAprilTagsCmd(false),
-            runTrajectory(feederToOutsideRamp),           
+            runTrajectory(feederToOutsideRamp),    
+                        
+            new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.PI : 0 ),
             Commands.repeatingSequence(m_robotDrive.stopCmd())
         );
     }

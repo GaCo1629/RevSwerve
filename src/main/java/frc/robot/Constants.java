@@ -146,7 +146,9 @@ public final class Constants {
     public static final int kCoPilotController1Port= 1;
     public static final int kCoPilotController2Port= 2;
     public static final double kDriveDeadband = 0.05;
+    public static final double kDriveReallyDeadband = 0.2;
     public static final int kDriverGyroReset = 14;
+    public static final int kDriverSquareUp = 8;  // Right Trigger as button
     public static final int kCP1Retract = 1;
     public static final int kCP1GroundCone = 2;
     public static final int kCP1GroundCube = 3;
@@ -172,29 +174,33 @@ public final class Constants {
     public static final double kMaxSpeedMPS = 3;
     public static final double kMaxAccelerationMPS2 = 3;
     public static final double kMaxAngularSpeedRPS = Math.PI;
-    public static final double kMaxAngularSpeedRPS2 = Math.PI;
+    public static final double kMaxAngularAccelerationRPS2 = Math.PI;
 
     public static final double kPXController = 2;
     public static final double kPYController = 2;
     public static final double kPThetaController = 1;
 
-    public static final double kAutoMaxAngularSpeedRPS = 8.0;
-    public static final double kAutoMaxAngularAccelerationRPS2 = 8.0 ;
+    public static final double kAutoMaxAngularSpeedRPS = Math.PI * 2;
+    public static final double kAutoMaxAngularAccelerationRPS2 = Math.PI * 2 ;
 
     public static final double kBalanceApproachSpeedMPS = 0.4 ;
    
     // Constraint for the motion profiled robot angle controller
     public static final TrapezoidProfile.Constraints kTranslateControllerConstraints = new TrapezoidProfile.Constraints(3, 1);
 
-    public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
-      kMaxAngularSpeedRPS, kMaxAngularSpeedRPS2);
+    public static final TrapezoidProfile.Constraints kYawControllerConstraints = new TrapezoidProfile.Constraints(
+      kMaxAngularSpeedRPS, kMaxAngularAccelerationRPS2);
   
     public static final TrapezoidProfile.Constraints kHeadingLockConstraints = new TrapezoidProfile.Constraints(
       kAutoMaxAngularSpeedRPS, kAutoMaxAngularAccelerationRPS2);
   
-    public static final double kPHeadingLockController = 1.5;
+    public static final double kPHeadingLockController = 1.5; // unit gain
     public static final double kIHeadingLockController = 0;
     public static final double kDHeadingLockController = 0; 
+
+    public static final double kPYawController = 6;  // radian gain
+    public static final double kIYawController = 0;
+    public static final double kDYawController = 0; 
 
     public static final double kNotRotating = 0.5;  // degrees per second was 0.5
   }
@@ -221,10 +227,10 @@ public final class Constants {
    
     public static final double kConeCollectPower  = -0.75 ;
     public static final double kConeAutoEjectPower = -0.3 ;
-    public static final double kConeHoldPower     = -0.15 ; //was -.05
+    public static final double kConeHoldPower     = -0.15 ; 
     public static final double kConeEjectPower    =  0.2 ;
     public static final double kCubeCollectPower  =  0.4 ;
-    public static final double kCubeHoldPower     =  0.1 ;
+    public static final double kCubeHoldPower     =  0.15 ;
     public static final double kCubeEjectPower    = -0.2 ;
     
     public static final double kArmConeBot = 0.23; // height = 19.25"
