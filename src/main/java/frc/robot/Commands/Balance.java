@@ -25,13 +25,11 @@ public class Balance  extends CommandBase {
     private BalanceStates m_state;
     private double  m_tiltoverPitch  =  0.0;   // number of degrees variation before stopping
     private double  m_approachSign;             // Are we going fwd or backwards when approaching the ramp
-     
-    /**
-     * Creates a new TrapezoidProfileCommand that will execute the given {@link TrapezoidProfile}.
-     * Output will be piped to the provided consumer function.
-     *
-     * @param driveSystem Access to the drive
-     * @param requirements The subsystems required by this command.
+
+    /***
+     * 
+     * @param driveSystem
+     * @param forwardApproach
      */
     public Balance(DriveSubsystem driveSystem, boolean forwardApproach) {
       SmartDashboard.putNumber("tiltover pitch", 0);

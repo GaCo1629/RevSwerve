@@ -36,14 +36,15 @@ public class AutoSubsystem extends SubsystemBase {
     private PIDController           m_yController;    
     private ProfiledPIDController   m_hController;
     
-    private final   int             m_numAutos = 7;
+    private final   int             m_numAutos = 8;
     private final   String[]        m_autoNames = {"Score CUBE", 
                                     "Score CONE",
-                                    "WALL start with RAMP", 
-                                    "CENTER start with RAMP", 
-                                    "FEEDER Start with RAMP",
-                                    "Wall start no ramp",
-                                    "feeder start no ramp" };
+                                    "WALL start with BALANCE", 
+                                    "CENTER start OVERTOP with BALANCE", 
+                                    "CENTER start with BALANCE", 
+                                    "FEEDER Start with BALANCE",
+                                    "Wall start NO balance",
+                                    "feeder start NO balance" };
 
     // Add commands to the autonomous command chooser
     private final SendableChooser<Integer> m_chooser = new SendableChooser<>();
@@ -101,15 +102,18 @@ public class AutoSubsystem extends SubsystemBase {
         
             case 3:
             default:
-            return getCenterRampAuto();
+            return getCenterOvertopRampAuto();
         
             case 4:
+            return getCenterRampAuto();
+
+            case 5:
             return getFeederRampAuto();
         
-            case 5:
+            case 6:
             return getWallNoRampAuto();
         
-            case 6:
+            case 7:
             return getFeederNoRampAuto();
         }
     }
@@ -284,22 +288,24 @@ public class AutoSubsystem extends SubsystemBase {
     }
 
     // ================================================================================================
+    public Command getCenterOvertopRampAuto(){
+        // Run path following command, then stop at the end.
+        return Commands.sequence(
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
+            Commands.waitUntil(Shared.inPosition),
+            m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
+            Commands.waitSeconds(1),
+            m_GPM.runCollectorCmd(0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            // Commands.waitUntil(Shared.inPosition), 
+            new Axial(m_robotDrive, 4.0, -DriveConstants.kDPADSpeed * DriveConstants.kMaxSpeedMetersPerSecond),
+            new Balance(m_robotDrive, true),   // balance the robot in fwd
+            Commands.repeatingSequence(m_robotDrive.setXCmd())
+        );
+    }
+
+    // ================================================================================================
     public Command getCenterRampAuto(){
-        
-        if (DriverStation.getAlliance() == Alliance.Red) {
-            // Protect in case we havent seen the target yet
-            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-                Shared.currentPose = new Pose2d(14.5, 2.74, new Rotation2d(0));
-            }
-
-        } else {
-            // Protect in case we havent seen the target yet
-            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-                Shared.currentPose = new Pose2d(2.03, 2.74, new Rotation2d(Math.PI));
-            }
-         }
-
-    
         // Run path following command, then stop at the end.
         return Commands.sequence(
             m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
@@ -312,7 +318,6 @@ public class AutoSubsystem extends SubsystemBase {
             new Balance(m_robotDrive, false),   // balance the robot in rev
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
-            
     }
 
     // ================================================================================================
