@@ -183,7 +183,7 @@ public class GPMSubsystem extends SubsystemBase {
             setGridTargetPosition(8);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos9)){
             setGridTargetPosition(9);
-        }
+        } 
     
 
         // run the collector.  Hold onto object once it's grabbed
@@ -302,9 +302,6 @@ public class GPMSubsystem extends SubsystemBase {
 
     public void setGridTargetPosition(int position) {
 
-        setFeederTargetPosition(false);
-
-        /* 
         // Save position number and calculate XY position
         double X,Y,H;
         Shared.gridNumber = position;
@@ -318,7 +315,8 @@ public class GPMSubsystem extends SubsystemBase {
             H = Math.PI;        
         }
         Shared.targetPose = new Pose2d(X, Y, new Rotation2d(H));
-        */
+        Shared.targetPoseSet = true;
+        
     }
     
     public void setFeederTargetPosition(boolean rightSide) {

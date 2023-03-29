@@ -298,7 +298,7 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             // Commands.waitUntil(Shared.inPosition), 
-            new Axial(m_robotDrive, 4.0, -DriveConstants.kDPADSpeed * DriveConstants.kMaxSpeedMetersPerSecond),
+            new Axial(m_robotDrive, -4.3, DriveConstants.kRampOverSpeed * DriveConstants.kMaxSpeedMetersPerSecond),
             new Balance(m_robotDrive, true),   // balance the robot in fwd
             Commands.repeatingSequence(m_robotDrive.setXCmd())
         );
