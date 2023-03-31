@@ -47,7 +47,8 @@ public final class Constants {
     public static final double kMaxSpeedMetersPerSecond = 4.8;
     public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
-    public static final double kSpeedFactor = 0.81;
+    public static final double kSpeedFactor = 0.85;
+    public static final double kSafeSpeedFactor = 0.75;
     public static final double kTurnFactor  = 0.70; 
     public static final double kDPADSpeed   = 0.20; 
     public static final double kRampOverSpeed   = 0.25; 
@@ -234,10 +235,10 @@ public final class Constants {
     public static final double kCubeHoldPower     =  0.15 ;
     public static final double kCubeEjectPower    = -0.2 ;
     
-    public static final double kArmConeBot = 0.23; // height = 19.25"
+    public static final double kArmConeBot = 0.29; // height = 24"
     public static final double kArmConeMid = 0.46; // height = 40"
     public static final double kArmConeTop = 0.57; // height = 53.5"
-    public static final double kArmCubeBot = 0.26; // height = 21.75"
+    public static final double kArmCubeBot = 0.3; // height = 24.75"
     public static final double kArmCubeMid = 0.48; // height = 42"
     public static final double kArmCubeTop = 0.55; // height = 51.25"
     public static final double kArmConeFeeder = 0.55; // height in = 51.125"
@@ -260,7 +261,6 @@ public final class Constants {
     public static final double kGreenColor = 0.75;
     public static final double kBlueColor = 0.85;
     public static final double kBlackColor = 0.99;
-        
   }
 
   public static final class NavConstants {

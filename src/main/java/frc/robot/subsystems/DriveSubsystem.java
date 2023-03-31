@@ -78,6 +78,7 @@ public class DriveSubsystem extends SubsystemBase {
   private double  currentHeading = 0;
   private double  headingSetpoint = 0;  
   private boolean disableZoom = false;
+  private boolean dangerZone = false;
 
   // Odometry class for tracking robot pose
   SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
@@ -95,6 +96,7 @@ public class DriveSubsystem extends SubsystemBase {
     this.driver = driver;
     this.copilot_1 = copilot_1;
     this.copilot_2 = copilot_2;
+    this.dangerZone = false;
 
     headingLockController = new ProfiledPIDController(AutoConstants.kPHeadingLockController, 0, 0, AutoConstants.kHeadingLockConstraints );
     headingLockController.enableContinuousInput(-Math.PI, Math.PI);
@@ -103,7 +105,6 @@ public class DriveSubsystem extends SubsystemBase {
       
   }
 
-  
   // ===   Commands that call driveSystem methods  =======
   public CommandBase setXCmd() {return this.runOnce(() -> setX());}
   public CommandBase moveCmd(double x, double y, double t, boolean fieldRel) {return this.runOnce(() -> move(x, y, t, fieldRel));}
@@ -111,7 +112,6 @@ public class DriveSubsystem extends SubsystemBase {
   public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
   public CommandBase lockCurrentHeadingCmd() {return this.runOnce(() -> lockCurrentHeading());}
   public CommandBase newHeadingSetpointCmd(double newSetpoint) {return this.runOnce(() -> newHeadingSetpoint(newSetpoint));}
-
 
  
   public void init() {
@@ -218,19 +218,40 @@ public class DriveSubsystem extends SubsystemBase {
     double xSpeed    ;
     double ySpeed    ;
     double turnSpeed ;
+    
 
     getHeading(); 
     
-    if (!driver.getL1Button()) {
-      xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband) *  DriveConstants.kSpeedFactor;
-      ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband) * DriveConstants.kSpeedFactor;
-      turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband) * DriveConstants.kTurnFactor;
-    } else {
+    // if Left Bumper being pressed, apply strong deadband to encourage orthogonal movement.
+    if (driver.getL1Button()) {
       xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveReallyDeadband) *  DriveConstants.kSpeedFactor;
       ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveReallyDeadband) * DriveConstants.kSpeedFactor;
       turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveReallyDeadband) * DriveConstants.kTurnFactor;
+    } else {
+      xSpeed     = -MathUtil.applyDeadband(driver.getLeftY(), OIConstants.kDriveDeadband) *  DriveConstants.kSpeedFactor;
+      ySpeed     = -MathUtil.applyDeadband(driver.getLeftX(), OIConstants.kDriveDeadband) * DriveConstants.kSpeedFactor;
+      turnSpeed  = -MathUtil.applyDeadband(driver.getRightX(), OIConstants.kDriveDeadband) * DriveConstants.kTurnFactor;
     }
     
+    dangerZone = false;
+
+    // reduce speed if we are in Power cable danger zone
+    if ((Shared.currentPose.getY() < 2.0) && (
+         (((DriverStation.getAlliance() == Alliance.Red)  && (Shared.currentPose.getX() > 10.0)) || 
+          ((DriverStation.getAlliance() == Alliance.Blue) && (Shared.currentPose.getX() < 6.5 ))   )
+                                              )) {
+      dangerZone = true;
+    }
+
+    SmartDashboard.putBoolean("Danger Zone", dangerZone);
+
+    // Limit speed if we are in danger zone
+    if (dangerZone) {
+      xSpeed = Math.min(xSpeed, DriveConstants.kSafeSpeedFactor);
+      ySpeed = Math.min(ySpeed, DriveConstants.kSafeSpeedFactor);
+    }
+
+    // Allow driver to square up heading
     if(driver.getRawButtonPressed(OIConstants.kDriverSquareUp)){
       squareUp();  //  point to 0 or 180.  Whichever is closest
     }
@@ -281,8 +302,8 @@ public class DriveSubsystem extends SubsystemBase {
     }
   
     // Convert the commanded speeds into the correct units for the drivetrain
-    double xSpeedMPS    = xSpeedLimited * DriveConstants.kMaxSpeedMetersPerSecond;
-    double ySpeedMPS    = ySpeedLimited * DriveConstants.kMaxSpeedMetersPerSecond;
+    double xSpeedMPS    = xSpeedLimited    * DriveConstants.kMaxSpeedMetersPerSecond;
+    double ySpeedMPS    = ySpeedLimited    * DriveConstants.kMaxSpeedMetersPerSecond;
     double turnSpeedRPS = turnSpeedLimited * DriveConstants.kMaxAngularSpeed;
 
     // Drive based on current goals.
@@ -297,8 +318,8 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber( "X Move", xSpeed);
     SmartDashboard.putNumber( "Y Move", ySpeed);
     SmartDashboard.putNumber( "Rotate", turnSpeed);
-    SmartDashboard.putBoolean("Heading Locked", headingLocked);
-    SmartDashboard.putString("Target", Shared.targetPose.toString());
+    SmartDashboard.putBoolean( "Heading Locked", headingLocked);
+    SmartDashboard.putString( "Target", Shared.targetPose.toString());
   }
   
   /***
@@ -371,10 +392,8 @@ public class DriveSubsystem extends SubsystemBase {
     Shared.useAprilTags = useTags;
   }
 
-
   public boolean isNotRotating() {
     SmartDashboard.putNumber("Rotate rate", m_gyro.getRate());
-
     return (Math.abs(m_gyro.getRate()) < AutoConstants.kNotRotating);
   }
 
@@ -409,12 +428,10 @@ public class DriveSubsystem extends SubsystemBase {
   public double getRoll() {
     return -m_gyro.getPitch();
   }
-
   
   public double getFCDHeading() {
       return Math.IEEEremainder(Math.toRadians(-m_gyro.getAngle()) + Math.PI, Math.PI * 2);
   }
-
 
   public Rotation2d getRotation2d() {
       return Rotation2d.fromRadians(getHeading());

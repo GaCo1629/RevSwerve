@@ -56,6 +56,7 @@ public class AutoSubsystem extends SubsystemBase {
         m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.6,
                                               AutoConstants.kMaxAccelerationMPS2);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
+        m_fastConfig.setReversed(true);
 
         m_xController = new PIDController(AutoConstants.kPXController, 0, 0);
         m_yController = new PIDController(AutoConstants.kPYController, 0, 0);
@@ -392,20 +393,18 @@ public class AutoSubsystem extends SubsystemBase {
 
             // Protect in case we havent seen the target yet
             if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-                Shared.currentPose = new Pose2d(14.6, 4.5, new Rotation2d(0.0));
+                Shared.currentPose = new Pose2d(14.4, 4.5, new Rotation2d(0.0));
             }
 
             // Basic trajectory to follow in RED. All units in meters.
             feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
                 // Start at the origin facing the +X 
-                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(160) ),
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(0) ),
                 // Pass through these two interior waypoints, making an 's' curve path
-                List.of(    new Translation2d(13.5, 4.7), 
-                            new Translation2d(12.5, 4.7),
-                            new Translation2d(11.5, 4.7)
-                            ),
-                new Pose2d(10.5, 5.3, new Rotation2d(0)),
+                List.of(    new Translation2d(13.5, 4.7)),
+                new Pose2d(10.5, 5.9, new Rotation2d(0)),
                 m_fastConfig);
+
         } else {
 
             if (Math.abs(Shared.currentPose.getX()) <  0.5) {
@@ -415,14 +414,10 @@ public class AutoSubsystem extends SubsystemBase {
             // Basic trajectory to follow in BLUE. All units in meters.
             feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
                 // Start at the origin facing the +X 
-                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(30) ),
+                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(Math.PI) ),
                 // Pass through these two interior waypoints, making an 's' curve path
-                List.of(    new Translation2d(3.03, 4.7), 
-                            new Translation2d(4.03, 4.7),
-                            new Translation2d(5.03, 4.7),
-                            new Translation2d(6.03, 5.2)
-                            ),
-                new Pose2d(6.03, 5.3, new Rotation2d(Math.PI)),
+                List.of( new Translation2d(3.03, 4.7) ),
+                new Pose2d(6.03, 5.9, new Rotation2d(Math.PI)),
                 m_fastConfig);
         }
             
