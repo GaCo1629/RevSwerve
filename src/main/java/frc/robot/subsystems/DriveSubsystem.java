@@ -149,24 +149,22 @@ public class DriveSubsystem extends SubsystemBase {
             m_rearRight.getPosition()
         });
 
-    if (Shared.useAprilTags) {
-      Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
+      if (Shared.useAprilTags) {
+        Optional<EstimatedRobotPose> result = pcw.getEstimatedGlobalPose(m_odometry.getEstimatedPosition()); 
 
-      Shared.canSeeAprilTag = result.isPresent();
-      if (Shared.canSeeAprilTag) {
+        Shared.canSeeAprilTag = result.isPresent();
+        if (Shared.canSeeAprilTag) {
           EstimatedRobotPose camPose = result.get();
           Pose2d camPose2d = camPose.estimatedPose.toPose2d();
           Pose2d gyroCamPose2d = new Pose2d(camPose2d.getTranslation(), getRotation2d());  // use gyro heading
           
           m_odometry.addVisionMeasurement(gyroCamPose2d, camPose.timestampSeconds);
       }
-
     }
      
     // Share current position
     Shared.currentPose = getPose();
-    
-    
+        
     SmartDashboard.putString("Est Pose", getPose().toString());
     SmartDashboard.putNumber("Field Y", getPose().getY());
     SmartDashboard.putNumber("Heading Deg", Math.toDegrees(getHeading()));
