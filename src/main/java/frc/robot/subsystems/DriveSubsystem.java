@@ -64,6 +64,8 @@ public class DriveSubsystem extends SubsystemBase {
   private final PhotonCameraWrapper pcw = new PhotonCameraWrapper();
 
   private SlewRateLimiter m_xLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
+  private SlewRateLimiter m_xArmOutLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewArmRate);
+  private SlewRateLimiter m_yArmOutLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewArmRate);
   private SlewRateLimiter m_yLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
   
@@ -280,9 +282,15 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     // Rate limit the input commands
-    xSpeedLimited = m_xLimiter.calculate(xSpeed) ;
-    ySpeedLimited = m_yLimiter.calculate(ySpeed);
+    if(Shared.armPosition < GPMConstants.kArmSafeToSpinn){
+      xSpeedLimited = m_xLimiter.calculate(xSpeed) ;
+      ySpeedLimited = m_yLimiter.calculate(ySpeed);
+    } else {
+      xSpeedLimited = m_xArmOutLimiter.calculate(xSpeed);
+      ySpeedLimited = m_yArmOutLimiter.calculate(ySpeed);
+    }
     turnSpeedLimited = m_rotLimiter.calculate(turnSpeed);
+    
   
     // Check Auto Heading
     if (Math.abs(turnSpeed) > 0.02) {

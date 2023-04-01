@@ -47,14 +47,15 @@ public final class Constants {
     public static final double kMaxSpeedMetersPerSecond = 4.8;
     public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
-    public static final double kSpeedFactor = 0.85;
-    public static final double kSafeSpeedFactor = 0.75;
-    public static final double kTurnFactor  = 0.70; 
-    public static final double kDPADSpeed   = 0.20; 
+    public static final double kSpeedFactor     = 0.85;
+    public static final double kSafeSpeedFactor = 0.70;
+    public static final double kTurnFactor      = 0.70; 
+    public static final double kDPADSpeed       = 0.20; 
     public static final double kRampOverSpeed   = 0.25; 
     public static final double kMinApproachRate = 0.075;
 
     public static final double kMagnitudeSlewRate = 1.8; // percent per second (1 = 100%)
+    public static final double kMagnitudeSlewArmRate = 0.75;
     public static final double kRotationalSlewRate = 1.8; // percent per second (1 = 100%)
 
     // Chassis configuration
