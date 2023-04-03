@@ -179,9 +179,11 @@ public final class Constants {
     public static final double kMaxAngularSpeedRPS = Math.PI;
     public static final double kMaxAngularAccelerationRPS2 = Math.PI;
 
+    // Used in Auto Path Following
     public static final double kPXController = 2;
     public static final double kPYController = 2;
     public static final double kPThetaController = 1;
+    public static final double kDThetaController = 0.005;
 
     public static final double kAutoMaxAngularSpeedRPS = Math.PI * 2;
     public static final double kAutoMaxAngularAccelerationRPS2 = Math.PI * 2 ;
@@ -197,10 +199,12 @@ public final class Constants {
     public static final TrapezoidProfile.Constraints kHeadingLockConstraints = new TrapezoidProfile.Constraints(
       kAutoMaxAngularSpeedRPS, kAutoMaxAngularAccelerationRPS2);
   
+    // Used in Teleop Heading lock Command
     public static final double kPHeadingLockController = 1.5; // unit gain
     public static final double kIHeadingLockController = 0;
-    public static final double kDHeadingLockController = 0; 
+    public static final double kDHeadingLockController = 0.01; // try to slow down approach
 
+    // Used in Yaw auto Command
     public static final double kPYawController = 6;  // radian gain
     public static final double kIYawController = 0;
     public static final double kDYawController = 0; 

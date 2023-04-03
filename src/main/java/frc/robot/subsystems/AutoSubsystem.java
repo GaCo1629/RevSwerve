@@ -2,6 +2,11 @@ package frc.robot.subsystems;
 
 import java.util.List;
 
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -16,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Shared;
@@ -34,7 +40,9 @@ public class AutoSubsystem extends SubsystemBase {
 
     private PIDController           m_xController;
     private PIDController           m_yController;    
-    private ProfiledPIDController   m_hController;
+    private PIDController           m_hController;
+
+    private final PathConstraints   m_pathConstraints = new PathConstraints(AutoConstants.kMaxSpeedMPS * 0.6, AutoConstants.kMaxAccelerationMPS2);
     
     private final   int             m_numAutos = 8;
     private final   String[]        m_autoNames = {"Score CUBE", 
@@ -58,10 +66,10 @@ public class AutoSubsystem extends SubsystemBase {
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
         m_fastConfig.setReversed(true);
 
+
         m_xController = new PIDController(AutoConstants.kPXController, 0, 0);
         m_yController = new PIDController(AutoConstants.kPYController, 0, 0);
-
-        m_hController = new ProfiledPIDController(AutoConstants.kPThetaController, 0, 0, AutoConstants.kHeadingLockConstraints);
+        m_hController = new PIDController(AutoConstants.kPThetaController, 0, AutoConstants.kDThetaController);
         m_hController.enableContinuousInput(-Math.PI, Math.PI);
 
         // Put the chooser on the dashboard
@@ -72,7 +80,6 @@ public class AutoSubsystem extends SubsystemBase {
                 m_chooser.setDefaultOption(m_autoNames[m], m);
              else
                 m_chooser.addOption(m_autoNames[m], m);
-    
         }
     }
 
@@ -119,16 +126,27 @@ public class AutoSubsystem extends SubsystemBase {
         }
     }
     
-    public SwerveControllerCommand runTrajectory( Trajectory myPath) {
-        return new SwerveControllerCommand(
-            myPath,
-            m_robotDrive::getPose, // Functional interface to feed supplier
-            DriveConstants.kDriveKinematics,
-            m_xController,
-            m_yController,
-            m_hController,
-            m_robotDrive::setModuleStates,
-            m_robotDrive);
+    public Command runTrajectoryCmd(String myPathName) {
+        PathPlannerTrajectory myPath = PathPlanner.loadPath(myPathName, m_pathConstraints);
+
+        return Commands.sequence(
+            new InstantCommand(() -> {
+                // Reset odometry to planned starting position if we don't know where we are
+                if (Shared.currentPose.getX() < 0.5) {
+                    m_robotDrive.resetOdometry(myPath.getInitialHolonomicPose());
+                }
+            }),
+            new PPSwerveControllerCommand(
+                myPath,
+                m_robotDrive::getPose, // Functional interface to feed supplier
+                DriveConstants.kDriveKinematics,
+                m_xController,
+                m_yController,
+                m_hController,
+                m_robotDrive::setModuleStates,
+                true,
+                m_robotDrive)
+        );
     }
 
     
@@ -217,7 +235,7 @@ public class AutoSubsystem extends SubsystemBase {
             Commands.waitSeconds(1),
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-            runTrajectory(wallToOutsideRamp),  
+            // runTrajectory(wallToOutsideRamp),  
             Commands.waitUntil(Shared.inPosition), 
             Commands.waitSeconds(0.5),
             new Balance(m_robotDrive, true),   // balance the robot driving forward 
@@ -282,8 +300,7 @@ public class AutoSubsystem extends SubsystemBase {
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.waitUntil(Shared.inPosition), 
 
-            //m_robotDrive.useAprilTagsCmd(false),
-            runTrajectory(wallToOutsideRamp),  
+            //runTrajectory(wallToOutsideRamp),  
             Commands.repeatingSequence(m_robotDrive.stopCmd())
         );
     }
@@ -375,7 +392,7 @@ public class AutoSubsystem extends SubsystemBase {
             Commands.waitSeconds(1),
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-            runTrajectory(feederToOutsideRamp),           
+            // runTrajectory(feederToOutsideRamp),           
             Commands.waitUntil(Shared.inPosition), 
             Commands.waitSeconds(0.5),
             new Balance(m_robotDrive, true),   // balance the robot forward 
@@ -387,53 +404,18 @@ public class AutoSubsystem extends SubsystemBase {
     // ================================================================================================
     public Command getFeederNoRampAuto(){
 
-        Trajectory feederToOutsideRamp;
-
-        if (DriverStation.getAlliance() == Alliance.Red) {
-
-            // Protect in case we havent seen the target yet
-            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-                Shared.currentPose = new Pose2d(14.4, 4.5, new Rotation2d(0.0));
-            }
-
-            // Basic trajectory to follow in RED. All units in meters.
-            feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
-                // Start at the origin facing the +X 
-                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(0) ),
-                // Pass through these two interior waypoints, making an 's' curve path
-                List.of(    new Translation2d(13.5, 4.7)),
-                new Pose2d(10.5, 5.9, new Rotation2d(0)),
-                m_fastConfig);
-
-        } else {
-
-            if (Math.abs(Shared.currentPose.getX()) <  0.5) {
-                Shared.currentPose = new Pose2d(2.03, 4.5, new Rotation2d(Math.PI));
-            }
-
-            // Basic trajectory to follow in BLUE. All units in meters.
-            feederToOutsideRamp = TrajectoryGenerator.generateTrajectory(
-                // Start at the origin facing the +X 
-                new Pose2d( Shared.currentPose.getTranslation(), Rotation2d.fromDegrees(Math.PI) ),
-                // Pass through these two interior waypoints, making an 's' curve path
-                List.of( new Translation2d(3.03, 4.7) ),
-                new Pose2d(6.03, 5.9, new Rotation2d(Math.PI)),
-                m_fastConfig);
-        }
-            
         // Run path following command, then stop at the end.
         return Commands.sequence(
-            m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
-            Commands.waitUntil(Shared.inPosition),
-            m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
-            Commands.waitSeconds(1),
-            m_GPM.runCollectorCmd(0),
-            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-            Commands.waitUntil(Shared.inPosition), 
-            //m_robotDrive.useAprilTagsCmd(false),
-            runTrajectory(feederToOutsideRamp),    
+            //m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
+            //Commands.waitUntil(Shared.inPosition),
+            //m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
+            //Commands.waitSeconds(1),
+            //m_GPM.runCollectorCmd(0),
+            //m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            //Commands.waitUntil(Shared.inPosition), 
+            runTrajectoryCmd("FeederMobility"),    
                         
-            new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.PI : 0 ),
+            //new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.PI : 0 ),
             Commands.repeatingSequence(m_robotDrive.stopCmd())
         );
     }
