@@ -152,6 +152,7 @@ public class AutoSubsystem extends SubsystemBase {
 
     public Command scoreCubeCmd() {
         return Commands.sequence(
+            m_robotDrive.setStaightCmd(),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmCubeTop),
             Commands.waitUntil(Shared.inPosition),
             m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower),
@@ -163,6 +164,7 @@ public class AutoSubsystem extends SubsystemBase {
 
     public Command scoreConeCmd() {
         return Commands.sequence(
+            m_robotDrive.setStaightCmd(),
             m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower),
             new Axial(m_robotDrive, -0.5, 1.0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmConeTop),

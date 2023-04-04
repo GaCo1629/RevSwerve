@@ -109,6 +109,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   // ===   Commands that call driveSystem methods  =======
   public CommandBase setXCmd() {return this.runOnce(() -> setX());}
+  public CommandBase setStaightCmd() {return this.runOnce(() -> setStraight());}
   public CommandBase moveCmd(double x, double y, double t, boolean fieldRel) {return this.runOnce(() -> move(x, y, t, fieldRel));}
   public CommandBase stopCmd() {return this.runOnce(() -> stop());}
   public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
@@ -128,7 +129,6 @@ public class DriveSubsystem extends SubsystemBase {
 
     // square up the robot by setting the heading to 0 or 180
     squareUp();
-   
   }
 
   @Override
@@ -139,7 +139,6 @@ public class DriveSubsystem extends SubsystemBase {
       lockCurrentHeading();
       // resetOdometry(new Pose2d());  // Temporary
     }
-
    
     // Update the odometry in the periodic block
     m_odometry.update(
@@ -219,7 +218,6 @@ public class DriveSubsystem extends SubsystemBase {
     double ySpeed    ;
     double turnSpeed ;
     
-
     getHeading(); 
     
     // if Left Bumper being pressed, apply strong deadband to encourage orthogonal movement.
@@ -475,6 +473,16 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
     m_rearLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
     m_rearRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
+  }
+
+  /**
+   * Sets the wheels into an || formation to Start staight out.
+   */
+  public void setStraight() {
+    m_frontLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(0)));
+    m_frontRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(0)));
+    m_rearLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(0)));
+    m_rearRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(0));
   }
 
   /**
