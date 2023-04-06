@@ -55,7 +55,7 @@ public final class Constants {
     public static final double kMinApproachRate = 0.075;
 
     public static final double kMagnitudeSlewRate = 1.8; // percent per second (1 = 100%)
-    public static final double kMagnitudeSlewArmRate = 0.75;
+    public static final double kMagnitudeSlewArmRate = 1.0;
     public static final double kRotationalSlewRate = 1.8; // percent per second (1 = 100%)
 
     // Chassis configuration
@@ -200,9 +200,9 @@ public final class Constants {
       kAutoMaxAngularSpeedRPS, kAutoMaxAngularAccelerationRPS2);
   
     // Used in Teleop Heading lock Command
-    public static final double kPHeadingLockController = 1.5; // unit gain
+    public static final double kPHeadingLockController = 1.4; // unit gain
     public static final double kIHeadingLockController = 0;
-    public static final double kDHeadingLockController = 0.01; // try to slow down approach
+    public static final double kDHeadingLockController = 0; // try to slow down approach
 
     // Used in Yaw auto Command
     public static final double kPYawController = 6;  // radian gain
