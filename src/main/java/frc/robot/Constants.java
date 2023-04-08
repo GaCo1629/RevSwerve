@@ -47,7 +47,7 @@ public final class Constants {
     public static final double kMaxSpeedMetersPerSecond = 4.8;
     public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second
 
-    public static final double kSpeedFactor     = 0.85;
+    public static final double kSpeedFactor     = 0.95; //was 0.85
     public static final double kSafeSpeedFactor = 0.70;
     public static final double kTurnFactor      = 1.0; //was 0.70
     public static final double kDPADSpeed       = 0.20; 
