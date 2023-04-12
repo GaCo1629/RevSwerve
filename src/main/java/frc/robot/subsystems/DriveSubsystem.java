@@ -84,6 +84,7 @@ public class DriveSubsystem extends SubsystemBase {
   private double  headingSetpoint = 0;  
   private boolean disableZoom = false;
   private boolean dangerZone = false;
+  private boolean needToSquareUp = false;
 
   // Odometry class for tracking robot pose
   SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
@@ -175,10 +176,10 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Level", Shared.gridLevel);
     SmartDashboard.putNumber("Position", Shared.gridNumber);
     SmartDashboard.putNumber( "Pitch", getPitch());
-    SmartDashboard.putNumber( "Roll",  getRoll());
-
+   
     disableZoom = SmartDashboard.getBoolean("Disable Zoom", false);
-    SmartDashboard.putBoolean("Zoom Disabled", disableZoom);
+    SmartDashboard.putBoolean("Zoom Disabled", disableZoom);   
+     SmartDashboard.putBoolean("Defense Mode", Shared.defenseModeOn);
   }
 
   /**
@@ -257,6 +258,8 @@ public class DriveSubsystem extends SubsystemBase {
       squareUp();  //  point to 0 or 180.  Whichever is closest
     }
 
+
+
     // Drive with pure motions
     int POV = driver.getPOV();
     if (POV >= 0) {
@@ -282,17 +285,22 @@ public class DriveSubsystem extends SubsystemBase {
       }
     }
 
+    // =========================================================================================================
     // Rate limit the input commands.  
     // 1) No limit if we are doing defense.  
     // 2) Moderate rate limit if the arm is in.
     // 3) Max rate limit if the arm is out.
-    if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos1)) {
+    Shared.defenseModeOn = copilot_2.getRawButton(OIConstants.kCP2Pos1);
+    if(Shared.defenseModeOn) {
+
+      // Make the spin follow the lateral
+      //turnSpeed = ySpeed;
 
       // If we are heading away from driver station to pick up scoring element, 
       // and we are in Defense mode, then reverse the sping direction to avoid getting stuck on defender.
-      if (!Shared.haveScoringElement) {
-        turnSpeed *= -1.0;
-      }
+      //if (!Shared.haveScoringElement) {
+      //  turnSpeed *= -1.0;
+      //}
 
       xSpeedLimited = xSpeed ;
       ySpeedLimited = ySpeed;
@@ -328,14 +336,26 @@ public class DriveSubsystem extends SubsystemBase {
       m_rotLimiter.reset(turnSpeed);
     }
     
-  
+    // just a thought to recover cleanly from any defensive spin
+    /* 
+    if(copilot_2.getRawButtonReleased(OIConstants.kCP2Pos1)){
+      if (headingLocked) {
+        squareUp();
+      } else {
+        needToSquareUp = true;
+      }
+    }
+    */
+
+    // ========================================================================================
+      
     // Check Auto Heading
     if (Math.abs(turnSpeed) > 0.02) {
       headingLocked = false;
     } else if (!headingLocked && isNotRotating()) {
       headingLocked = true;
-      lockCurrentHeading(); 
-    }
+      lockCurrentHeading();
+    } 
 
     if (headingLocked) {
       turnSpeedLimited = headingLockController.calculate(currentHeading, headingSetpoint);

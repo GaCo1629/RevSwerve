@@ -166,6 +166,7 @@ public class GPMSubsystem extends SubsystemBase {
 
         
         // Look for cone scoring position
+        /* 
         if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos1)){
             setGridTargetPosition(1);
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos2)){
@@ -185,6 +186,7 @@ public class GPMSubsystem extends SubsystemBase {
         } else if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos9)){
             setGridTargetPosition(9);
         } 
+        */
     
 
         // run the collector.  Hold onto object once it's grabbed

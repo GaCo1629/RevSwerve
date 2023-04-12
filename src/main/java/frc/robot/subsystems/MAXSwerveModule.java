@@ -165,10 +165,10 @@ public class MAXSwerveModule {
     m_turningPIDController.setReference(optimizedDesiredState.angle.getRadians(), CANSparkMax.ControlType.kPosition);
     
     
-    SmartDashboard.putNumber( String.format( "S%d V Req", m_turningSparkMax.getDeviceId()), optimizedDesiredState.speedMetersPerSecond);
+    // SmartDashboard.putNumber( String.format( "S%d V Req", m_turningSparkMax.getDeviceId()), optimizedDesiredState.speedMetersPerSecond);
     SmartDashboard.putNumber( String.format( "S%d V Act", m_turningSparkMax.getDeviceId()), m_drivingEncoder.getVelocity());
-    SmartDashboard.putNumber( String.format( "S%d V Power", m_drivingSparkMax.getDeviceId()), m_drivingSparkMax.getAppliedOutput());
-    SmartDashboard.putNumber( String.format( "S%d V Current", m_drivingSparkMax.getDeviceId()), m_drivingSparkMax.getOutputCurrent());
+    //SmartDashboard.putNumber( String.format( "S%d V Power", m_drivingSparkMax.getDeviceId()), m_drivingSparkMax.getAppliedOutput());
+    //SmartDashboard.putNumber( String.format( "S%d V Current", m_drivingSparkMax.getDeviceId()), m_drivingSparkMax.getOutputCurrent());
 
     m_desiredState = desiredState;
   }
