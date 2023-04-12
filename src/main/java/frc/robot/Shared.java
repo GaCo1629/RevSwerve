@@ -17,6 +17,7 @@ public final class Shared {
     public static boolean targetPoseSet = false;
     public static boolean useAprilTags = true;
     public static boolean canSeeAprilTag = false;
+    public static boolean haveScoringElement = false;
 
     public static BooleanSupplier inPosition = () -> armInPosition;
     

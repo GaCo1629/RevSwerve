@@ -54,9 +54,11 @@ public final class Constants {
     public static final double kRampOverSpeed   = 0.25; 
     public static final double kMinApproachRate = 0.075;
 
-    public static final double kMagnitudeSlewRate = 1.8; // percent per second (1 = 100%)
-    public static final double kMagnitudeSlewArmRate = 1.0;
-    public static final double kRotationalSlewRate = 1.8; // percent per second (1 = 100%)
+    public static final double kLinearSlewRate     = 1.8; // percent per second (1 = 100%)
+    public static final double kLinearSlewArmRate  = 1.0;
+
+    public static final double kRotationalSlewRate    = 1.8; // percent per second (1 = 100%)
+    public static final double kRotationalSlewArmRate = 1.0; 
 
     // Chassis configuration
     public static final double kTrackWidth = Units.inchesToMeters(26.5);

@@ -63,11 +63,14 @@ public class DriveSubsystem extends SubsystemBase {
 
   private final PhotonCameraWrapper pcw = new PhotonCameraWrapper();
 
-  private SlewRateLimiter m_xLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
-  private SlewRateLimiter m_xArmOutLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewArmRate);
-  private SlewRateLimiter m_yArmOutLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewArmRate);
-  private SlewRateLimiter m_yLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
+  private SlewRateLimiter m_xLimiter = new SlewRateLimiter(DriveConstants.kLinearSlewRate);
+  private SlewRateLimiter m_yLimiter = new SlewRateLimiter(DriveConstants.kLinearSlewRate);
+
+  private SlewRateLimiter m_xArmOutLimiter = new SlewRateLimiter(DriveConstants.kLinearSlewArmRate);
+  private SlewRateLimiter m_yArmOutLimiter = new SlewRateLimiter(DriveConstants.kLinearSlewArmRate);
+
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
+  private SlewRateLimiter m_rotArmOutLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewArmRate);
   
   private PS4Controller driver;
   private Joystick copilot_1;
@@ -279,15 +282,51 @@ public class DriveSubsystem extends SubsystemBase {
       }
     }
 
-    // Rate limit the input commands
-    if(Shared.armPosition < GPMConstants.kArmSafeToSpinn){
+    // Rate limit the input commands.  
+    // 1) No limit if we are doing defense.  
+    // 2) Moderate rate limit if the arm is in.
+    // 3) Max rate limit if the arm is out.
+    if(copilot_2.getRawButtonPressed(OIConstants.kCP2Pos1)) {
+
+      // If we are heading away from driver station to pick up scoring element, 
+      // and we are in Defense mode, then reverse the sping direction to avoid getting stuck on defender.
+      if (!Shared.haveScoringElement) {
+        turnSpeed *= -1.0;
+      }
+
+      xSpeedLimited = xSpeed ;
+      ySpeedLimited = ySpeed;
+      turnSpeedLimited = turnSpeed;
+
+      // Tell the other limiters what is going on.
+      m_xLimiter.reset(xSpeed);
+      m_yLimiter.reset(ySpeed);
+      m_rotLimiter.reset(turnSpeed);
+
+      m_xArmOutLimiter.reset(xSpeed);
+      m_yArmOutLimiter.reset(ySpeed);
+      m_rotArmOutLimiter.reset(turnSpeed);
+
+    } else if(Shared.armPosition < GPMConstants.kArmSafeToSpinn){
       xSpeedLimited = m_xLimiter.calculate(xSpeed) ;
       ySpeedLimited = m_yLimiter.calculate(ySpeed);
+      turnSpeedLimited = m_rotLimiter.calculate(turnSpeed);
+
+      // Tell the other limiters what is going on.
+      m_xArmOutLimiter.reset(xSpeed);
+      m_yArmOutLimiter.reset(ySpeed);
+      m_rotArmOutLimiter.reset(turnSpeed);
+
     } else {
       xSpeedLimited = m_xArmOutLimiter.calculate(xSpeed);
       ySpeedLimited = m_yArmOutLimiter.calculate(ySpeed);
+      turnSpeedLimited = m_rotArmOutLimiter.calculate(turnSpeed);
+
+      // Tell the other limiters what is going on.
+      m_xLimiter.reset(xSpeed);
+      m_yLimiter.reset(ySpeed);
+      m_rotLimiter.reset(turnSpeed);
     }
-    turnSpeedLimited = m_rotLimiter.calculate(turnSpeed);
     
   
     // Check Auto Heading

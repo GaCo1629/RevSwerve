@@ -72,6 +72,7 @@ public class GPMSubsystem extends SubsystemBase {
     public void periodic() {
         runGPMPID();   
         SmartDashboard.putBoolean("Scoring", Shared.cone);
+        SmartDashboard.putBoolean("Have Scoring Element", Shared.haveScoringElement);
     }
 
     public void init() {
@@ -195,6 +196,7 @@ public class GPMSubsystem extends SubsystemBase {
                 runCollector(GPMConstants.kCubeCollectPower);
                 collectorHoldingPower = GPMConstants.kCubeHoldPower;
             }
+            Shared.haveScoringElement = true;
         } else if (driver.getSquareButton()) {
             if (Shared.cone) {
                 runCollector(GPMConstants.kConeEjectPower);
@@ -203,14 +205,14 @@ public class GPMSubsystem extends SubsystemBase {
                 runCollector(GPMConstants.kCubeEjectPower);
                 collectorHoldingPower = 0;
             }
+            Shared.haveScoringElement = false;
         } else {
             runCollector(collectorHoldingPower);
         }    
 
-
         // Set the collector color
         blinkyLEDs.set(Shared.cone ? GPMConstants.kConeColor : GPMConstants.kCubeColor);
-    
+   
     }
 
     void setArmGroundPosition(boolean isCone) {
