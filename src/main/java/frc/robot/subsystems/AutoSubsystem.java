@@ -185,7 +185,7 @@ public class AutoSubsystem extends SubsystemBase {
     public Command scoreConeLevel1Cmd() {
         return Commands.sequence(
             m_robotDrive.setStaightCmd(),
-            m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower),
+            m_GPM.runCollectorCmd(-1.0),
             Commands.waitSeconds(0.5),
             m_GPM.runCollectorCmd(0)
         );   
@@ -295,21 +295,26 @@ public class AutoSubsystem extends SubsystemBase {
         // Run path following command, then stop at the end.
         return Commands.sequence(
             scoreConeLevel1Cmd(),
+            m_GPM.newArmSetpointCmd(0.25),
+            Commands.waitSeconds(0.5),
+            m_GPM.lowerGPMCmd(),
             runTrajectoryCmd("Feeder-Mobility-Pickup", true, false), 
             new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.toRadians(-170) : 10),
-            m_GPM.newArmSetpointCmd(GPMConstants.kArmConeGround),
-            Commands.waitSeconds(0.25),
-            m_GPM.lowerGPMCmd(),
+            m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower),
+            m_GPM.newArmSetpointCmd(0.3),
             Commands.waitUntil(Shared.inPosition),
             Commands.waitSeconds(0.5),
-            m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower),
-            new Axial(m_robotDrive, 0.6, 0.55),
+            
+            new Axial(m_robotDrive, 0.7, 0.55),
             m_GPM.liftGPMCmd(),
-            new Axial(m_robotDrive, -0.6, 0.55),
-            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-
+            new Axial(m_robotDrive, -0.7, 0.55),
+            m_GPM.newArmSetpointCmd(0.24),
+            m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower),
             runTrajectoryCmd("Feeder-Mobility-Place", true, false), 
-            new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.PI : 0),
+            m_GPM.runCollectorCmd(GPMConstants.kConeEjectPower),
+            Commands.waitSeconds(0.25),
+            m_GPM.runCollectorCmd(0),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.repeatingSequence(m_robotDrive.stopCmd())
         );
     }
