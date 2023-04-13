@@ -72,7 +72,7 @@ public class GPMSubsystem extends SubsystemBase {
     public void periodic() {
         runGPMPID();   
         SmartDashboard.putBoolean("Scoring", Shared.cone);
-        SmartDashboard.putBoolean("Have Scoring Element", Shared.haveScoringElement);
+        SmartDashboard.putNumber("Collector Current", m_collectorMax.getOutputCurrent() );
     }
 
     public void init() {

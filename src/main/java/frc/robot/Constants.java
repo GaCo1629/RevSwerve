@@ -252,7 +252,7 @@ public final class Constants {
     public static final double kArmCubeFeeder = 0.54; // height in = 49.5"
     public static final double kArmHome = 0.16;
     public static final double kArmGround = 0.36;
-    public static final double kArmConeGround = 0.38;
+    public static final double kArmConeGround = 0.46;
     public static final double kArmCubeGround = 0.34;
     public static final double kArmMax  = 0.6;
     
