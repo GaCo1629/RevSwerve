@@ -187,8 +187,8 @@ public final class Constants {
     public static final double kPThetaController = 1;
     public static final double kDThetaController = 0.005;
 
-    public static final double kAutoMaxAngularSpeedRPS = Math.PI * 2;
-    public static final double kAutoMaxAngularAccelerationRPS2 = Math.PI * 2 ;
+    public static final double kAutoMaxAngularSpeedRPS = 6;
+    public static final double kAutoMaxAngularAccelerationRPS2 = 6 ;
 
     public static final double kBalanceApproachSpeedMPS = 0.4 ;
    
@@ -202,7 +202,7 @@ public final class Constants {
       kAutoMaxAngularSpeedRPS, kAutoMaxAngularAccelerationRPS2);
   
     // Used in Teleop Heading lock Command
-    public static final double kPHeadingLockController = 1.4; // unit gain
+    public static final double kPHeadingLockController = 1.3; // unit gain was 1.4
     public static final double kIHeadingLockController = 0;
     public static final double kDHeadingLockController = 0; // try to slow down approach
 

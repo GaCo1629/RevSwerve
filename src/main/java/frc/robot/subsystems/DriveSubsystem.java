@@ -57,7 +57,6 @@ public class DriveSubsystem extends SubsystemBase {
       DriveConstants.kBackRightChassisAngularOffset);
 
   // The gyro sensor
-  //private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
   private final AHRS m_gyro = new AHRS(SPI.Port.kMXP); 
   private double gyro2FieldOffset = 0;
 
@@ -84,7 +83,6 @@ public class DriveSubsystem extends SubsystemBase {
   private double  headingSetpoint = 0;  
   private boolean disableZoom = false;
   private boolean dangerZone = false;
-  private boolean needToSquareUp = false;
 
   // Odometry class for tracking robot pose
   SwerveDrivePoseEstimator m_odometry = new SwerveDrivePoseEstimator(
@@ -258,8 +256,6 @@ public class DriveSubsystem extends SubsystemBase {
       squareUp();  //  point to 0 or 180.  Whichever is closest
     }
 
-
-
     // Drive with pure motions
     int POV = driver.getPOV();
     if (POV >= 0) {
@@ -336,17 +332,6 @@ public class DriveSubsystem extends SubsystemBase {
       m_rotLimiter.reset(turnSpeed);
     }
     
-    // just a thought to recover cleanly from any defensive spin
-    /* 
-    if(copilot_2.getRawButtonReleased(OIConstants.kCP2Pos1)){
-      if (headingLocked) {
-        squareUp();
-      } else {
-        needToSquareUp = true;
-      }
-    }
-    */
-
     // ========================================================================================
       
     // Check Auto Heading
