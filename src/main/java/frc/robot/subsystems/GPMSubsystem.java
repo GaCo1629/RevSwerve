@@ -224,9 +224,9 @@ public class GPMSubsystem extends SubsystemBase {
 
     void setArmGroundPosition() {
         if (Shared.cone) {
-            plannedGroundPosition = GPMConstants.kArmConeGround;
+            plannedGroundPosition = GPMConstants.kArmGround;
         } else {
-            plannedGroundPosition = GPMConstants.kArmCubeGround;
+            plannedGroundPosition = GPMConstants.kArmGround;
         }
 
         if (copilot_1.getRawButton(OIConstants.kCP1ExtendGround)) {
@@ -373,4 +373,10 @@ public class GPMSubsystem extends SubsystemBase {
     }
     public CommandBase runCollectorCmd(double speed) {return this.runOnce(() -> runCollector(speed));}
 
+    public void useAprilTags(boolean useTags) {
+        Shared.useAprilTags = useTags;
+    }
+    public CommandBase useAprilTagsCmd(boolean useTags) {return this.runOnce(() -> useAprilTags(useTags));}
+ 
+    
 }

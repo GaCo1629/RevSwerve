@@ -36,7 +36,8 @@ public class Yaw extends CommandBase {
   
     @Override
     public void execute() {
-      m_driveSystem.move(0, 0, m_yawController.calculate(m_driveSystem.getHeading(), m_headingR), false);
+      double turnRate = m_yawController.calculate(m_driveSystem.getHeading(), m_headingR);
+      m_driveSystem.move(0, 0, turnRate, false);
     }
     
 

@@ -55,7 +55,7 @@ public class Axial extends CommandBase {
     private TrapezoidProfile driveForward (double distanceM, double speedMPS) {
       return new TrapezoidProfile(
         // Limit the max acceleration and velocity
-        new TrapezoidProfile.Constraints(speedMPS, AutoConstants.kMaxAccelerationMPS2 / 2.0),
+        new TrapezoidProfile.Constraints(speedMPS, AutoConstants.kMaxAccelerationPathPlannerMPS2 / 2.0),
         // End at desired position in meters; implicitly starts at 0
         new TrapezoidProfile.State(distanceM, 0 )); 
     }

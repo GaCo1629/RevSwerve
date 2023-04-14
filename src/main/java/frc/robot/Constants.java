@@ -176,15 +176,16 @@ public final class Constants {
   }
 
   public static final class AutoConstants {
-    public static final double kMaxSpeedMPS = 3;
-    public static final double kMaxAccelerationMPS2 = 3;
+    public static final double kMaxVelocityPathPlannerMPS = 3;      // These MUST patch the Path Planne3 values.
+    public static final double kMaxAccelerationPathPlannerMPS2 = 1.5; //
+
     public static final double kMaxAngularSpeedRPS = Math.PI;
     public static final double kMaxAngularAccelerationRPS2 = Math.PI;
 
     // Used in Auto Path Following
-    public static final double kPXController = 2;
+    public static final double kPXController = 2; // was 2
     public static final double kPYController = 2;
-    public static final double kPThetaController = 1;
+    public static final double kPThetaController = 2;  // was 1
     
     public static final double kAutoMaxAngularSpeedRPS = 6;
     public static final double kAutoMaxAngularAccelerationRPS2 = 6 ;
@@ -241,6 +242,7 @@ public final class Constants {
     public static final double kCubeHoldPower     =  0.15 ;
     public static final double kCubeEjectPower    = -0.2 ;
     
+    public static final double kArmLiftSafe = 0.20;
     public static final double kArmConeBot = 0.29; // height = 24"
     public static final double kArmConeMid = 0.46; // height = 40"
     public static final double kArmConeTop = 0.57; // height = 53.5"
@@ -250,7 +252,7 @@ public final class Constants {
     public static final double kArmConeFeeder = 0.55; // height in = 51.125"
     public static final double kArmCubeFeeder = 0.54; // height in = 49.5"
     public static final double kArmHome = 0.16;
-    public static final double kArmGround = 0.36;
+    public static final double kArmGround = 0.25;
     public static final double kArmConeGround = 0.46;
     public static final double kArmCubeGround = 0.34;
     public static final double kArmMax  = 0.6;

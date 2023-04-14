@@ -7,8 +7,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 13.953209477847528,
-        "y": 4.695235676185638
+        "x": 13.88723842038118,
+        "y": 4.98153053448964
       },
       "holonomicAngle": 0.0,
       "isReversal": false,
@@ -24,16 +24,16 @@
     },
     {
       "anchorPoint": {
-        "x": 12.529606255793707,
-        "y": 4.8
+        "x": 12.878175685092463,
+        "y": 4.979218414493837
       },
       "prevControl": {
-        "x": 13.066307158255341,
-        "y": 4.788580831862518
+        "x": 13.414998054320948,
+        "y": 4.979218414493837
       },
       "nextControl": {
-        "x": 11.351763978645007,
-        "y": 4.825060473981887
+        "x": 11.700066837322007,
+        "y": 4.979218414493837
       },
       "holonomicAngle": 0.0,
       "isReversal": false,
@@ -49,15 +49,40 @@
     },
     {
       "anchorPoint": {
-        "x": 10.405640982222135,
-        "y": 4.761793113329817
+        "x": 11.526265522839836,
+        "y": 4.98
       },
       "prevControl": {
-        "x": 11.170149844136487,
-        "y": 4.896596652676039
+        "x": 12.259343568568372,
+        "y": 4.98
+      },
+      "nextControl": {
+        "x": 11.00229226190459,
+        "y": 4.98
+      },
+      "holonomicAngle": -90.0,
+      "isReversal": false,
+      "velOverride": null,
+      "isLocked": false,
+      "isStopPoint": false,
+      "stopEvent": {
+        "names": [],
+        "executionBehavior": "parallel",
+        "waitBehavior": "none",
+        "waitTime": 0
+      }
+    },
+    {
+      "anchorPoint": {
+        "x": 10.0,
+        "y": 4.98
+      },
+      "prevControl": {
+        "x": 10.409381246315936,
+        "y": 4.97047950589963
       },
       "nextControl": null,
-      "holonomicAngle": -169.75591255354135,
+      "holonomicAngle": -142.27500495788917,
       "isReversal": false,
       "velOverride": null,
       "isLocked": false,
@@ -70,35 +95,32 @@
       }
     }
   ],
+  "maxVelocity": 3.0,
+  "maxAcceleration": 1.5,
+  "isReversed": null,
   "markers": [
     {
-      "position": 0.0,
+      "position": 0.1,
       "names": [
-        "event"
+        "lowerGPM"
       ]
     },
     {
-      "position": 0.0,
+      "position": 0.19636363636366239,
       "names": [
-        "event"
+        "armGround"
       ]
     },
     {
-      "position": 0.0,
+      "position": 1.05,
       "names": [
-        "event"
+        "aprilTagOff"
       ]
     },
     {
-      "position": 0.0,
+      "position": 2.5,
       "names": [
-        "event"
-      ]
-    },
-    {
-      "position": 0.421818181818162,
-      "names": [
-        "armDown"
+        "collectCone"
       ]
     }
   ]

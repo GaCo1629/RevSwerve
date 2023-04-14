@@ -28,12 +28,10 @@ public class AutoSubsystem extends SubsystemBase {
      
     private DriveSubsystem          m_robotDrive ;
     private GPMSubsystem            m_GPM; 
-    private TrajectoryConfig        m_fastConfig;
-
     private HashMap<String, Command> eventMap ;
     private SwerveAutoBuilder       autoBuilder;
 
-    private final PathConstraints   m_pathConstraints = new PathConstraints(AutoConstants.kMaxSpeedMPS * 0.6, AutoConstants.kMaxAccelerationMPS2 / 2.0);
+    private final PathConstraints   m_pathConstraints = new PathConstraints(AutoConstants.kMaxVelocityPathPlannerMPS, AutoConstants.kMaxAccelerationPathPlannerMPS2);
     
     private final   int             m_numAutos = 9;
     private final   String[]        m_autoNames = {
@@ -55,10 +53,6 @@ public class AutoSubsystem extends SubsystemBase {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
         
-        m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.6, AutoConstants.kMaxAccelerationMPS2);
-        m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
-        m_fastConfig.setReversed(true);
-
         // Put the chooser on the dashboard
         SmartDashboard.putData(m_chooser);  
         //m_chooser.setDefaultOption("Choose Auto: Score CUBE", 0);
@@ -80,7 +74,8 @@ public class AutoSubsystem extends SubsystemBase {
         eventMap.put("liftGPM",  m_GPM.liftGPMCmd());
         eventMap.put("lowerGPM", m_GPM.lowerGPMCmd());
         eventMap.put("armHome",  m_GPM.newArmSetpointCmd(GPMConstants.kArmHome));
-        eventMap.put("arm20",  m_GPM.newArmSetpointCmd(0.20));
+        eventMap.put("armGround",  m_GPM.newArmSetpointCmd(GPMConstants.kArmGround));
+        eventMap.put("arm25",  m_GPM.newArmSetpointCmd(0.25));
         eventMap.put("arm30",  m_GPM.newArmSetpointCmd(0.30));
         eventMap.put("arm40",  m_GPM.newArmSetpointCmd(0.40));
         eventMap.put("collectCone",  m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower));
@@ -89,8 +84,8 @@ public class AutoSubsystem extends SubsystemBase {
         eventMap.put("collectCube",  m_GPM.runCollectorCmd(GPMConstants.kCubeCollectPower));
         eventMap.put("holdCube",  m_GPM.runCollectorCmd(GPMConstants.kCubeHoldPower));
         eventMap.put("ejectCube",  m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower));
-        eventMap.put("aprilTagOn",  m_robotDrive.useAprilTagsCmd(true));
-        eventMap.put("aprilTagOff",  m_robotDrive.useAprilTagsCmd(false));
+        eventMap.put("aprilTagOn",  m_GPM.useAprilTagsCmd(true));
+        eventMap.put("aprilTagOff",  m_GPM.useAprilTagsCmd(false));
     
         // Create the AutoBuilder. .
         autoBuilder = new SwerveAutoBuilder(
@@ -205,7 +200,7 @@ public class AutoSubsystem extends SubsystemBase {
     public Command scoreConeLevel1Cmd() {
         return Commands.sequence(
             m_robotDrive.setStaightCmd(),
-            m_GPM.runCollectorCmd(-1.0),
+            m_GPM.runCollectorCmd(GPMConstants.kConeAutoEjectPower),
             Commands.waitSeconds(0.5),
             m_GPM.runCollectorCmd(0)
         );   
@@ -315,26 +310,27 @@ public class AutoSubsystem extends SubsystemBase {
         // Run path following command, then stop at the end.
         return Commands.sequence(
             scoreConeLevel1Cmd(),
-            m_GPM.newArmSetpointCmd(0.25),
-            Commands.waitSeconds(0.5),
-            m_GPM.lowerGPMCmd(),
             runTrajectoryCmd("Feeder-Mobility-Pickup", true, false), 
-            new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.toRadians(-170) : 10),
-            m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower),
-            m_GPM.newArmSetpointCmd(0.3),
-            Commands.waitUntil(Shared.inPosition),
-            Commands.waitSeconds(0.5),
+            new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.toRadians(-142) : Math.toRadians(-38)),
             
-            new Axial(m_robotDrive, 0.7, 0.55),
+            //Commands.waitUntil(Shared.inPosition),
+            //Commands.waitSeconds(0.5),
+            
+            new Axial(m_robotDrive, 0.5, 0.45),
             m_GPM.liftGPMCmd(),
-            new Axial(m_robotDrive, -0.7, 0.55),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-            m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower),
-            runTrajectoryCmd("Feeder-Mobility-Place", true, true),
+            //new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.toRadians(0) :Math.toRadians(180)),
+            m_GPM.useAprilTagsCmd(true),
+            //m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            //new Axial(m_robotDrive, 0.7, 0.55),
+
+            
+            //m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower),
+            runTrajectoryCmd("Feeder-Mobility-Place", false, true),
             m_GPM.newArmSetpointCmd(0.24),
             Commands.waitUntil(Shared.inPosition), 
             m_GPM.runCollectorCmd(GPMConstants.kConeEjectPower),
-            Commands.waitSeconds(0.25),
+            Commands.waitSeconds(0.5),
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             Commands.repeatingSequence(m_robotDrive.stopCmd())
