@@ -327,8 +327,8 @@ public class AutoSubsystem extends SubsystemBase {
             
             //m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower),
             runTrajectoryCmd("Feeder-Mobility-Place", false, true),
-            m_GPM.newArmSetpointCmd(0.24),
             Commands.waitUntil(Shared.inPosition), 
+            Commands.waitSeconds(0.5),
             m_GPM.runCollectorCmd(GPMConstants.kConeEjectPower),
             Commands.waitSeconds(0.5),
             m_GPM.runCollectorCmd(0),
