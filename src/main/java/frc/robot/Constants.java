@@ -185,8 +185,7 @@ public final class Constants {
     public static final double kPXController = 2;
     public static final double kPYController = 2;
     public static final double kPThetaController = 1;
-    public static final double kDThetaController = 0.005;
-
+    
     public static final double kAutoMaxAngularSpeedRPS = 6;
     public static final double kAutoMaxAngularAccelerationRPS2 = 6 ;
 

@@ -1,12 +1,13 @@
 package frc.robot.subsystems;
 
+import java.util.HashMap;
+
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.commands.FollowPathWithEvents;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+import com.pathplanner.lib.auto.PIDConstants;
+import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -14,7 +15,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Shared;
 import frc.robot.Commands.Axial;
@@ -30,9 +30,8 @@ public class AutoSubsystem extends SubsystemBase {
     private GPMSubsystem            m_GPM; 
     private TrajectoryConfig        m_fastConfig;
 
-    private PIDController           m_xController;
-    private PIDController           m_yController;    
-    private PIDController           m_hController;
+    private HashMap<String, Command> eventMap ;
+    private SwerveAutoBuilder       autoBuilder;
 
     private final PathConstraints   m_pathConstraints = new PathConstraints(AutoConstants.kMaxSpeedMPS * 0.6, AutoConstants.kMaxAccelerationMPS2 / 2.0);
     
@@ -50,7 +49,8 @@ public class AutoSubsystem extends SubsystemBase {
 
     // Add commands to the autonomous command chooser
     private final SendableChooser<Integer> m_chooser = new SendableChooser<>();
-          
+
+    //------------------------------------------------------------------
     public AutoSubsystem(DriveSubsystem robotDrive, GPMSubsystem GPM) {
         this.m_robotDrive = robotDrive;
         this.m_GPM = GPM;
@@ -58,11 +58,6 @@ public class AutoSubsystem extends SubsystemBase {
         m_fastConfig = new TrajectoryConfig(  AutoConstants.kMaxSpeedMPS * 0.6, AutoConstants.kMaxAccelerationMPS2);
         m_fastConfig.setKinematics(DriveConstants.kDriveKinematics);
         m_fastConfig.setReversed(true);
-
-        m_xController = new PIDController(AutoConstants.kPXController, 0, 0);
-        m_yController = new PIDController(AutoConstants.kPYController, 0, 0);
-        m_hController = new PIDController(AutoConstants.kPThetaController, 0, AutoConstants.kDThetaController);
-        m_hController.enableContinuousInput(-Math.PI, Math.PI);
 
         // Put the chooser on the dashboard
         SmartDashboard.putData(m_chooser);  
@@ -79,6 +74,36 @@ public class AutoSubsystem extends SubsystemBase {
         m_robotDrive.resetGyroToZero();
         m_GPM.liftGPM();
         Shared.useAprilTags = true;
+
+        // Build the event map for all trajectories
+        eventMap = new HashMap<>();
+        eventMap.put("liftGPM",  m_GPM.liftGPMCmd());
+        eventMap.put("lowerGPM", m_GPM.lowerGPMCmd());
+        eventMap.put("armHome",  m_GPM.newArmSetpointCmd(GPMConstants.kArmHome));
+        eventMap.put("arm20",  m_GPM.newArmSetpointCmd(0.20));
+        eventMap.put("arm30",  m_GPM.newArmSetpointCmd(0.30));
+        eventMap.put("arm40",  m_GPM.newArmSetpointCmd(0.40));
+        eventMap.put("collectCone",  m_GPM.runCollectorCmd(GPMConstants.kConeCollectPower));
+        eventMap.put("holdCone",  m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower));
+        eventMap.put("ejectCone",  m_GPM.runCollectorCmd(GPMConstants.kConeEjectPower));
+        eventMap.put("collectCube",  m_GPM.runCollectorCmd(GPMConstants.kCubeCollectPower));
+        eventMap.put("holdCube",  m_GPM.runCollectorCmd(GPMConstants.kCubeHoldPower));
+        eventMap.put("ejectCube",  m_GPM.runCollectorCmd(GPMConstants.kCubeEjectPower));
+        eventMap.put("aprilTagOn",  m_robotDrive.useAprilTagsCmd(true));
+        eventMap.put("aprilTagOff",  m_robotDrive.useAprilTagsCmd(false));
+    
+        // Create the AutoBuilder. .
+        autoBuilder = new SwerveAutoBuilder(
+            m_robotDrive::getPose, // Pose2d supplier
+            m_robotDrive::resetOdometry, // Pose2d consumer, used to reset odometry at the beginning of auto
+            DriveConstants.kDriveKinematics, // SwerveDriveKinematics
+            new PIDConstants(AutoConstants.kPXController, 0, 0), 
+            new PIDConstants(AutoConstants.kPThetaController, 0, 0),
+            m_robotDrive::setModuleStates, // Module states consumer used to output to the drive subsystem
+            eventMap,
+            false, // Should the path be automatically mirrored depending on alliance color. Optional, defaults to true
+            m_robotDrive // The drive subsystem. Used to properly set the requirements of path following commands
+        );
     }
 
     @Override
@@ -136,22 +161,16 @@ public class AutoSubsystem extends SubsystemBase {
         
         return Commands.sequence(
             m_robotDrive.useAprilTagsCmd(useAprilTag),
+            /*
             new InstantCommand(() -> {
                 // Reset odometry to planned starting position if we don't know where we are
                 if (SetStartPosition) {
                     m_robotDrive.resetOdometry(myPath.getInitialHolonomicPose());
                 }
             }),
-            new PPSwerveControllerCommand(
-                myPath,
-                m_robotDrive::getPose, // Functional interface to feed supplier
-                DriveConstants.kDriveKinematics,
-                m_xController,
-                m_yController,
-                m_hController,
-                m_robotDrive::setModuleStates,
-                false,   // Do not mirror for red
-                m_robotDrive)
+            */
+            autoBuilder.resetPose(myPath),
+            autoBuilder.followPathWithEvents(myPath)
         );
     }
 
@@ -323,5 +342,7 @@ public class AutoSubsystem extends SubsystemBase {
     }
  
 //===================================================================================================
+
+
 
 }
