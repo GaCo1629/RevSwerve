@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.FollowPathWithEvents;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -308,9 +309,11 @@ public class AutoSubsystem extends SubsystemBase {
             new Axial(m_robotDrive, 0.7, 0.55),
             m_GPM.liftGPMCmd(),
             new Axial(m_robotDrive, -0.7, 0.55),
-            m_GPM.newArmSetpointCmd(0.24),
+            m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
             m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower),
-            runTrajectoryCmd("Feeder-Mobility-Place", true, false), 
+            runTrajectoryCmd("Feeder-Mobility-Place", true, true),
+            m_GPM.newArmSetpointCmd(0.24),
+            Commands.waitUntil(Shared.inPosition), 
             m_GPM.runCollectorCmd(GPMConstants.kConeEjectPower),
             Commands.waitSeconds(0.25),
             m_GPM.runCollectorCmd(0),
