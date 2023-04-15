@@ -319,20 +319,21 @@ public class AutoSubsystem extends SubsystemBase {
             new Axial(m_robotDrive, 0.5, 0.45),
             m_GPM.liftGPMCmd(),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-            //new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.toRadians(0) :Math.toRadians(180)),
-            m_GPM.useAprilTagsCmd(true),
-            //m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
-            //new Axial(m_robotDrive, 0.7, 0.55),
+            m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower),
 
-            
-            //m_GPM.runCollectorCmd(GPMConstants.kConeHoldPower),
             runTrajectoryCmd("Feeder-Mobility-Place", false, true),
+
+            /*  Only used if we are scoring cube
             Commands.waitUntil(Shared.inPosition), 
             Commands.waitSeconds(0.5),
             m_GPM.runCollectorCmd(GPMConstants.kConeEjectPower),
             Commands.waitSeconds(0.5),
             m_GPM.runCollectorCmd(0),
             m_GPM.newArmSetpointCmd(GPMConstants.kArmHome),
+            */
+
+            new Yaw(m_robotDrive, (DriverStation.getAlliance() == Alliance.Red) ? Math.toRadians(0) : Math.toRadians(180)),
+            Commands.waitSeconds(1.0),
             Commands.repeatingSequence(m_robotDrive.stopCmd())
         );
     }
