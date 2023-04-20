@@ -17,6 +17,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
@@ -214,6 +215,7 @@ public class GPMSubsystem extends SubsystemBase {
 
         // Set the collector color
         blinkyLEDs.set(Shared.cone ? GPMConstants.kConeColor : GPMConstants.kCubeColor);
+
    
     }
 

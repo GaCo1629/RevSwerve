@@ -11,9 +11,9 @@ public class Balance  extends CommandBase {
     private DriveSubsystem  m_driveSystem;
     private final   Timer   m_timer          = new Timer();
     private final   double  m_dangerPitch    =  25.0;  // Going uphill
-    private final   double  m_balancedPitch  =   5.0;  // number of degrees variation before stopping
+    private final   double  m_balancedPitch  =   4.0;  // number of degrees variation before stopping
     private final   double  m_mountingPitch  =   4.0;  // number of degrees variation before stopping
-    private final   double  m_climbingPitch  =  13.0;  // number of degrees variation before stopping
+    private final   double  m_climbingPitch  =  11.0;  // number of degrees variation before stopping
     
     private final   double  APPROACH_SPEED   =  1.2;
     private final   double  MOUNT_SPEED      =  1.0;
