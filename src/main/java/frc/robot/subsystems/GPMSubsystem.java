@@ -54,7 +54,8 @@ public class GPMSubsystem extends SubsystemBase {
 
     private double plannedGroundPosition = GPMConstants.kArmConeGround;
     private double plannedFeederPosition = GPMConstants.kArmConeFeeder;
-         
+    private DigitalOutput coneLight;
+    private DigitalOutput cubeLight;
     public GPMSubsystem(PS4Controller driver, Joystick copilot_1, Joystick copilot_2) {
         this.driver = driver;
         this.copilot_1 = copilot_1;
@@ -67,6 +68,10 @@ public class GPMSubsystem extends SubsystemBase {
         m_armEncoder = m_armRightMax.getAbsoluteEncoder(Type.kDutyCycle);  
         //blinkyLEDs.set(DriverStation.getAlliance() == Alliance.Blue ? GPMConstants.kBlueColor : GPMConstants.kRedColor);
         liftGPM();
+        coneLight = new DigitalOutput(0);
+        coneLight.set(false);
+        cubeLight = new DigitalOutput(1);
+        cubeLight.set(false);
     }
 
     @Override
@@ -142,8 +147,12 @@ public class GPMSubsystem extends SubsystemBase {
         // Look for copilot selecting cone or cube for feeder pickup
         if (copilot_1.getRawButtonPressed(OIConstants.kCP1FeederCone)) {
             setArmFeederPosition(true);
+            coneLight.set(true);
+            cubeLight.set(false);
         } else if (copilot_1.getRawButtonPressed(OIConstants.kCP1FeederCube)) {
             setArmFeederPosition(false);
+            coneLight.set(false);
+            cubeLight.set(true);
         }
 
                     

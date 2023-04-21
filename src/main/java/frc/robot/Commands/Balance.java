@@ -18,7 +18,7 @@ public class Balance  extends CommandBase {
     private final   double  APPROACH_SPEED   =  1.2;
     private final   double  MOUNT_SPEED      =  1.0;
     private final   double  CLIMB_SPEED      =  0.5;
-    private final   double  CRAWL_SPEED      =  0.2;
+    private final   double  CRAWL_SPEED      =  0.4; //was 0.2
     private final   double  CORRECTING_SPEED =  0.1;
 
     private BalanceStates m_state;
