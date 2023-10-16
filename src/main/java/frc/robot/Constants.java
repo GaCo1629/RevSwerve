@@ -50,7 +50,8 @@ public final class Constants {
     public static final double kSpeedFactor     = 0.95; //was 0.95
     public static final double kSafeSpeedFactor = 0.70;
     public static final double kTurnFactor      = 0.70; //was 0.70
-    public static final double kDPADSpeed       = 0.20; 
+    public static final double kDPADAxialSpeed  = 0.20; 
+    public static final double kDPADLateralSpeed = 0.30; 
     public static final double kRampOverSpeed   = 0.25; 
     public static final double kMinApproachRate = 0.075;
 

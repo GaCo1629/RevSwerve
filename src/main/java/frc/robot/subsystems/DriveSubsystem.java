@@ -261,10 +261,10 @@ public class DriveSubsystem extends SubsystemBase {
     if (POV >= 0) {
       turnSpeed = 0;
       switch ((int)(POV / 45)) {
-        case 0:  xSpeed =  DriveConstants.kDPADSpeed; ySpeed =  0.0; break;
-        case 2:  xSpeed =  0.0;                       ySpeed = -DriveConstants.kDPADSpeed; break;
-        case 4:  xSpeed = -DriveConstants.kDPADSpeed; ySpeed =  0.0; break;
-        case 6:  xSpeed =  0.0;                       ySpeed =  DriveConstants.kDPADSpeed; break;
+        case 0:  xSpeed =  DriveConstants.kDPADAxialSpeed; ySpeed =  0.0; break;
+        case 2:  xSpeed =  0.0;                       ySpeed = -DriveConstants.kDPADLateralSpeed; break;
+        case 4:  xSpeed = -DriveConstants.kDPADAxialSpeed; ySpeed =  0.0; break;
+        case 6:  xSpeed =  0.0;                       ySpeed =  DriveConstants.kDPADLateralSpeed; break;
         default: xSpeed =  0.0;                       ySpeed =  0.0; break;
       }
     } else if (driver.getCircleButton()) {
@@ -397,7 +397,7 @@ public class DriveSubsystem extends SubsystemBase {
     
     xError = Math.min(xError, 1.0);
     if (xError > 0) {
-      rate += xError * DriveConstants.kDPADSpeed;
+      rate += xError * DriveConstants.kDPADAxialSpeed;
     }
 
     SmartDashboard.putNumber("Human Distance", xError);
